@@ -27,6 +27,7 @@ export class GameBoard {
         this.hasMadeFirstMove = false;
         this.hasBeenSolved = false; 
         this.isLockedAfterSolve = false; 
+        this.violationTimeoutId = null; 
     }
 
     create() {
@@ -78,10 +79,18 @@ export class GameBoard {
             this.onFirstMove();
         }
 
-        this.gameState.cycleCell(row, col);
+        const previousState =
+            this.gameState.getCell(row, col);
 
+        this.gameState.cycleCell(row, col);
         this.renderCell(cell);
-        this.renderViolations(); 
+
+        if (previousState === CELL_STATES.EMPTY) {
+            this.scheduleViolationRender(450);
+        } else {
+            this.cancelScheduledViolationRender();
+            this.renderViolations();
+        }
 
         const board = this.gameState.getBoard(); 
 
@@ -134,25 +143,33 @@ export class GameBoard {
     }
 
     reset() {
+        if (this.violationTimeoutId !== null) {
+            window.clearTimeout(this.violationTimeoutId);
+            this.violationTimeoutId = null;
+        }
+
         this.hasMadeFirstMove = false;
-        this.hasBeenSolved = false; 
+        this.hasBeenSolved = false;
         this.isLockedAfterSolve = false;
 
         this.gameState.reset();
         this.render();
 
-        const cells = this.boardElement.querySelectorAll(".cell"); 
+        const cells = this.boardElement.querySelectorAll(".cell");
 
-        cells.forEach(cell => {
-            const row = Number(cell.dataset.row); 
-            const col = Number(cell.dataset.col); 
+        cells.forEach(cell  => {
+            const row = Number(cell.dataset.row);
+            const col = Number(cell.dataset.col);
 
-            cell.classList.remove("cell--solved"); 
+            cell.classList.remove(
+                "cell--solved",
+                "cell--invalid"
+            );
 
-            cell.disabled = this.gameState.isLocked(row, col); 
+            cell.disabled = this.gameState.isLocked(row, col);
         });
 
-        this.renderViolations(); 
+        this.renderViolations();
     }
 
     renderViolations() {
@@ -172,6 +189,24 @@ export class GameBoard {
                 violations.has(key)
             );
         });
+    }
+
+    scheduleViolationRender(delay = 400) {
+        if (this.violationTimeoutId !== null) {
+            window.clearTimeout(this.violationTimeoutId);
+        }
+
+        this.violationTimeoutId = window.setTimeout( () => {
+            this.renderViolations(); 
+            this.violationTimeoutId = null; 
+        }, delay); 
+    }
+
+    cancelScheduledViolationRender() {
+        if (this.violationTimeoutId !== null) {
+            window.clearTimeout(this.violationTimeoutId);
+            this.violationTimeoutId = null;
+        }
     }
 
     lockBoard() {
