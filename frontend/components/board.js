@@ -24,6 +24,7 @@ export class GameBoard {
         this.gameState = gameState;
         this.onFirstMove = options.onFirstMove ?? (() => {});
         this.onSolved = options.onSolved ?? (() => {}); 
+        this.onHintUsed = options.onHintUSed ?? (() => {}); 
         this.hasMadeFirstMove = false;
         this.hasBeenSolved = false; 
         this.isLockedAfterSolve = false; 
@@ -110,9 +111,16 @@ export class GameBoard {
         const col = Number(cell.dataset.col);
         const cellState = this.gameState.getCell(row, col);
         const symbol = STATE_SYMBOLS[cellState];
+        const isHinted = this.gameState.isHinted(row, col);
 
-        cell.dataset.state = cellState ?? "empty"; 
+        cell.dataset.state =  cellState ?? "empty";
         cell.textContent = symbol;
+        cell.classList.toggle("cell--hinted", isHinted);
+
+        cell.disabled =
+            this.gameState.isLocked(row, col) ||
+            isHinted ||
+            this.isLockedAfterSolve;
 
         const position = `row ${row + 1}, column ${col + 1}`;
 
@@ -120,11 +128,16 @@ export class GameBoard {
             cell.setAttribute(
                 "aria-label",
                 `${symbol}, fixed cell, ${position}`
-            );        
+            );
+        } else if (isHinted) {
+            cell.setAttribute(
+                "aria-label",
+                `${symbol}, hinted cell, ${position}`
+            );
         } else if (cellState === CELL_STATES.EMPTY) {
             cell.setAttribute(
                 "aria-label",
-                `empty cell, ${position}`
+                `Empty cell, ${position}`
             );
         } else {
             cell.setAttribute(
@@ -217,5 +230,62 @@ export class GameBoard {
             cell.disabled = true;
             cell.classList.add("cell--solved");
         });
+    }
+
+    getCellElement(row, col) {
+        return this.boardElement.querySelector(
+            `.cell[data-row="${row}"][data-col="${col}"]`
+        );
+    }
+
+    giveHint() {
+        if (this.hasBeenSolved || this.isLockedAfterSolve) {
+            return false;
+        }
+
+        const candidates = this.gameState.getHintCandidates();
+
+        if (candidates.length === 0) {
+            return false;
+        }
+
+        const randomIndex = Math.floor(Math.random() * candidates.length);
+
+        const { row, col } =  candidates[randomIndex];
+
+        if (!this.hasMadeFirstMove) {
+            this.hasMadeFirstMove = true;
+            this.onFirstMove();
+        }
+
+        const applied = this.gameState.applyHint(row, col);
+
+        if (!applied) {
+            return false;
+        }
+
+        const cell = this.getCellElement(row, col);
+
+        if (cell) {
+            cell.classList.add("cell--hinted");
+            cell.disabled = true;
+            this.renderCell(cell);
+        }
+
+        this.cancelScheduledViolationRender();
+        this.renderViolations();
+
+        this.onHintUsed({ row, col });
+
+        const board = this.gameState.getBoard();
+
+        if ( !this.hasBeenSolved && isBoardSolved(board) ) {
+            this.hasBeenSolved = true;
+            this.isLockedAfterSolve = true;
+            this.lockBoard();
+            this.onSolved();
+        }
+
+        return true;
     }
 }

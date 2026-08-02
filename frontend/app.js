@@ -53,7 +53,9 @@ function initialiseGame() {
         !solvedModal ||
         !solvedTime ||
         !solvedHints ||
-        !closeModalButton
+        !closeModalButton ||
+        !shareResultButton ||
+        !shareStatus
     ) {
         throw new Error(
             "One or more required game elements are missing."
@@ -69,6 +71,10 @@ function initialiseGame() {
         {
             onFirstMove: () => {
                 timer.start();
+            },
+
+            onHintUsed: () => {
+                hintsUsed += 1;
             },
 
             onSolved: () => {
@@ -90,20 +96,16 @@ function initialiseGame() {
     resetButton.addEventListener("click", () => {
         gameBoard.reset();
         timer.reset();
-        
-        hintsUsed = 0; 
+        hintsUsed = 0;
         shareStatus.textContent = "";
 
         if (solvedModal.open) {
             solvedModal.close(); 
         }
-
     });
 
     hintButton.addEventListener("click", () => {
-        hintsUsed += 1; 
-
-        console.log(`Hints used: ${hintsUsed}`); 
+        gameBoard.giveHint();
     });
 
     solvedModal.addEventListener("click", (event) => {

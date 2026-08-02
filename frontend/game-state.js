@@ -11,14 +11,29 @@ export const CELL_STATES = {
  * null means the player can edit the cell.
  * "x" or "y" means the cell starts with that value.
  */
-const startingPuzzle = [
-    ["y",  null, null, null, null, "y" ],
-    [null, null, null, null, null, null],
-    [null, null, null, null, null, null],
-    [null, null, null, null, null, null],
-    [null, null, null, null, null, null],
-    ["y",  null, null, null, null, "x" ]
-];
+const puzzle = {
+    id: "test-puzzle-1",
+
+    startingBoard: [
+        ["y",  null, null, null, null, "y"],
+        [null, null, null, null, null, null],
+        [null, null, null, null, null, null],
+        [null, null, null, null, null, null],
+        [null, null, null, null, null, null],
+        ["y",  null, null, null, null, "x"]
+    ],
+
+    solution: [
+        ["y", "x", "y", "x", "x", "y"],
+        ["x", "y", "x", "y", "y", "x"],
+        ["x", "y", "y", "x", "x", "y"],
+        ["y", "x", "x", "y", "x", "y"],
+        ["x", "y", "x", "y", "y", "x"],
+        ["y", "x", "y", "x", "y", "x"]
+    ],
+
+    relations: []
+};
 
 function copyBoard(board) {
     return board.map((row) => [...row]);
@@ -31,14 +46,23 @@ function createLockedCells(puzzle) {
 }
 
 export class GameState {
-    constructor(puzzle = startingPuzzle) {
-        this.startingBoard = copyBoard(puzzle);
-        this.board = copyBoard(puzzle);
-        this.lockedCells = createLockedCells(puzzle);
+    constructor(currentPuzzle = puzzle) {
+        this.puzzle = currentPuzzle; 
+
+        this.startingBoard = copyBoard(currentPuzzle.startingBoard);
+        this.board = copyBoard(currentPuzzle.startingBoard);
+        this.solution = copyBoard(currentPuzzle.solution); 
+        this.lockedCells = createLockedCells(currentPuzzle.startingBoard);
+
+        this.hintedCells = new Set(); 
     }
 
     getCell(row, col) {
         return this.board[row][col];
+    }
+
+    getSolutionCell(row, col) {
+        return this.solution[row][col]; 
     }
     
     getBoard() {
@@ -47,31 +71,69 @@ export class GameState {
     
     reset() {
         this.board = copyBoard(this.startingBoard);
+        this.hintedCells.clear();
     }
 
     isLocked(row, col) {
         return this.lockedCells[row][col];
     }
 
-    cycleCell(row, column) {
-        if (this.isLocked(row, column)) {
-            return this.getCell(row, column);
+    isHinted(row, col) {
+        return this.hintedCells.has(`${row},${col}`);
+    }
+
+    cycleCell(row, col) {
+        if ( this.isLocked(row, col) || this.isHinted(row, col) ) {
+            return this.getCell(row, col);
         }
 
-        const currentState = this.board[row][column];
+        const currentState = this.board[row][col];
 
         let nextState;
 
-        if (currentState === null) {
-            nextState = "x";
-        } else if (currentState === "x") {
-            nextState = "y";
+        if (currentState === CELL_STATES.EMPTY) {
+            nextState = CELL_STATES.X;
+        } else if (currentState === CELL_STATES.X) {
+            nextState = CELL_STATES.Y;
         } else {
-            nextState = null;
+            nextState = CELL_STATES.EMPTY;
         }
 
-        this.board[row][column] = nextState;
+        this.board[row][col] = nextState;
 
         return nextState;
+    }
+
+    applyHint(row, col) {
+        if (this.isLocked(row, col) || this.isHinted(row, col)) {
+            return false; 
+        }
+
+        this.board[row][col] = this.solution[row][col];
+
+        this.hintedCells.add(`${row},${col}`);
+
+        return true; 
+    }
+
+    getHintCandidates() {
+        const candidates = [];
+
+        for (let row = 0; row < BOARD_SIZE; row += 1) {
+            for (let col = 0; col < BOARD_SIZE; col += 1) {
+                const current = this.board[row][col];
+                const correct = this.solution[row][col];
+
+                if (
+                    !this.isLocked(row, col) &&
+                    !this.isHinted(row, col) &&
+                    current !== correct
+                ) {
+                    candidates.push({ row, col });
+                }
+            }
+        }
+
+        return candidates;
     }
 }
