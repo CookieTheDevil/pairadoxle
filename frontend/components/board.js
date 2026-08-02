@@ -3,6 +3,11 @@ import {
     CELL_STATES
 } from "../game-state.js";
 
+import {
+    findViolations,
+    isBoardSolved
+} from "../validator.js";
+
 const STATE_SYMBOLS = {
     [CELL_STATES.EMPTY]: '',
     [CELL_STATES.X]: 'X',
@@ -18,7 +23,9 @@ export class GameBoard {
         this.boardElement = boardElement;
         this.gameState = gameState;
         this.onFirstMove = options.onFirstMove ?? (() => {});
+        this.onSolved = options.onSolved ?? (() => {}); 
         this.hasMadeFirstMove = false;
+        this.hasBeenSolved = false; 
     }
 
     create() {
@@ -69,6 +76,17 @@ export class GameBoard {
         this.gameState.cycleCell(row, col);
 
         this.renderCell(cell);
+        this.renderViolations(); 
+
+        const board = this.gameState.getBoard(); 
+
+        if (
+            !this.hasBeenSolved && 
+            isBoardSolved(board)
+        ) {
+            this.hasBeenSolved = true; 
+            this.onSolved(); 
+        }
     }
 
     renderCell(cell) {
@@ -110,8 +128,29 @@ export class GameBoard {
 
     reset() {
         this.hasMadeFirstMove = false;
+        this.hasBeenSolved = false; 
+
         this.gameState.reset();
         this.render();
+        this.renderViolations(); 
     }
 
+    renderViolations() {
+        const violations = findViolations(
+            this.gameState.getBoard()
+        );
+
+        const cells = this.boardElement.querySelectorAll(".cell");
+
+        cells.forEach((cell) => {
+            const row = Number(cell.dataset.row);
+            const col = Number(cell.dataset.col);
+            const key = `${row},${col}`;
+
+            cell.classList.toggle(
+                "cell--invalid",
+                violations.has(key)
+            );
+        });
+    }
 }

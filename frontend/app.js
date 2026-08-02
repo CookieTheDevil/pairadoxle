@@ -24,28 +24,75 @@ function initialiseGame() {
     const hintButton = document.querySelector("#hint-button");
     const resetButton = document.querySelector("#reset-button");
 
-    if (!boardElement || !timerElement || !resetButton || !hintButton) {
-        throw new Error("One or more required game elements are missing.");
+    let hintsUsed = 0; 
+    const solvedModal = document.querySelector("#solved-modal"); 
+    const solvedTime = document.querySelector("#solved-time"); 
+    const solvedHints = document.querySelector("#solved-hints"); 
+    const closeModalButton = document.querySelector("#close-modal-button"); 
+
+    if (
+        !boardElement ||
+        !timerElement ||
+        !resetButton ||
+        !hintButton ||
+        !solvedModal ||
+        !solvedTime ||
+        !solvedHints ||
+        !closeModalButton
+    ) {
+        throw new Error(
+            "One or more required game elements are missing."
+        );
     }
 
     const gameState = new GameState();
     const timer = new GameTimer(timerElement);
 
-    const gameBoard = new GameBoard(boardElement, gameState, {
-        onFirstMove: () => {
-            timer.start();
+    const gameBoard = new GameBoard(
+        boardElement,
+        gameState,
+        {
+            onFirstMove: () => {
+                timer.start();
+            },
+
+            onSolved: () => {
+                timer.stop();
+
+                solvedTime.textContent = timer.getFormattedTime();
+                solvedHints.textContent = String(hintsUsed);
+                solvedModal.showModal();
+            }
         }
-    });
+    );
 
     gameBoard.create();
 
     resetButton.addEventListener("click", () => {
         gameBoard.reset();
         timer.reset();
+        
+        hintsUsed = 0; 
+
+        if (solvedModal.open) {
+            solvedModal.close(); 
+        }
     });
 
     hintButton.addEventListener("click", () => {
-        console.log("Hint functionality will be added later.");
+        hintsUsed += 1; 
+
+        console.log(`Hints used: ${hintsUsed}`); 
+    });
+
+    solvedModal.addEventListener("click", (event) => {
+        if (event.target === solvedModal) {
+            solvedModal.close();
+        }
+    });
+
+    closeModalButton.addEventListener("click", () => {
+        solvedModal.close();
     });
 
     displayPuzzleDate();

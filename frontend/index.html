@@ -67,6 +67,27 @@
                 </table>
             </div>
         </main>
+        <dialog id="solved-modal" aria-labelledby="solved-title">
+            <div class="solved-modal-content">
+                <h2 id="solved-title">Puzzle solved!</h2>
+
+                <div class="solved-stats">
+                    <p>
+                        <span>Time</span>
+                        <strong id="solved-time">00:00</strong>
+                    </p>
+
+                    <p>
+                        <span>Hints used</span>
+                        <strong id="solved-hints">0</strong>
+                    </p>
+                </div>
+
+                <button id="close-modal-button" type="button">
+                    Close
+                </button>
+            </div>
+        </dialog>
         <script type="module" src="./app.js"></script>
     </body>
 </html>
