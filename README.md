@@ -33,7 +33,7 @@ SQLite-compatible database
 /
 Supabase
 Daily Leaderboard database
-Daily Puzzle generation
+Daily Puzzle 
 ```
 
 ## 
