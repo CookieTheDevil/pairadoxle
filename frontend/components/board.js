@@ -26,6 +26,7 @@ export class GameBoard {
         this.onSolved = options.onSolved ?? (() => {}); 
         this.hasMadeFirstMove = false;
         this.hasBeenSolved = false; 
+        this.isLockedAfterSolve = false; 
     }
 
     create() {
@@ -65,6 +66,10 @@ export class GameBoard {
     }
 
     handleCellClick(cell) {
+        if (this.isLockedAfterSolve) {
+            return; 
+        }
+
         const row = Number(cell.dataset.row);
         const col = Number(cell.dataset.col);
 
@@ -85,6 +90,8 @@ export class GameBoard {
             isBoardSolved(board)
         ) {
             this.hasBeenSolved = true; 
+            this.isLockedAfterSolve = true; 
+            this.lockBoard(); 
             this.onSolved(); 
         }
     }
@@ -129,9 +136,22 @@ export class GameBoard {
     reset() {
         this.hasMadeFirstMove = false;
         this.hasBeenSolved = false; 
+        this.isLockedAfterSolve = false;
 
         this.gameState.reset();
         this.render();
+
+        const cells = this.boardElement.querySelectorAll(".cell"); 
+
+        cells.forEach(cell => {
+            const row = Number(cell.dataset.row); 
+            const col = Number(cell.dataset.col); 
+
+            cell.classList.remove("cell--solved"); 
+
+            cell.disabled = this.gameState.isLocked(row, col); 
+        });
+
         this.renderViolations(); 
     }
 
@@ -151,6 +171,16 @@ export class GameBoard {
                 "cell--invalid",
                 violations.has(key)
             );
+        });
+    }
+
+    lockBoard() {
+        const cells =
+            this.boardElement.querySelectorAll(".cell");
+
+        cells.forEach((cell) => {
+            cell.disabled = true;
+            cell.classList.add("cell--solved");
         });
     }
 }

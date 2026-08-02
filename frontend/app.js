@@ -18,6 +18,18 @@ function displayPuzzleDate() {
     }).format(today);
 }
 
+function createShareText(time, hints) {
+    const hintLabel =
+        hints === 1 ? "hint" : "hints";
+
+    return [
+        "Pairadoxle",
+        `Solved in ${time}`,
+        `${hints} ${hintLabel} used`,
+        window.location.href
+    ].join("\n");
+}
+
 function initialiseGame() {
     const timerElement = document.querySelector("#timer");
     const boardElement = document.querySelector("#game-board");
@@ -29,6 +41,9 @@ function initialiseGame() {
     const solvedTime = document.querySelector("#solved-time"); 
     const solvedHints = document.querySelector("#solved-hints"); 
     const closeModalButton = document.querySelector("#close-modal-button"); 
+
+    const shareResultButton = document.querySelector("#share-result-button"); 
+    const shareStatus = document.querySelector("#share-status"); 
 
     if (
         !boardElement ||
@@ -61,7 +76,11 @@ function initialiseGame() {
 
                 solvedTime.textContent = timer.getFormattedTime();
                 solvedHints.textContent = String(hintsUsed);
-                solvedModal.showModal();
+                shareStatus.textContent = "";
+
+                if (!solvedModal.open) {
+                    solvedModal.showModal();
+                }
             }
         }
     );
@@ -73,10 +92,12 @@ function initialiseGame() {
         timer.reset();
         
         hintsUsed = 0; 
+        shareStatus.textContent = "";
 
         if (solvedModal.open) {
             solvedModal.close(); 
         }
+
     });
 
     hintButton.addEventListener("click", () => {
@@ -93,6 +114,34 @@ function initialiseGame() {
 
     closeModalButton.addEventListener("click", () => {
         solvedModal.close();
+    });
+
+    shareResultButton.addEventListener("click", async () => {
+        const shareText = createShareText(
+            solvedTime.textContent,
+            hintsUsed
+        );
+
+        try {
+            await navigator.clipboard.writeText(shareText);
+
+            const originalText =
+                shareResultButton.textContent;
+
+            shareResultButton.textContent = "Copied!";
+            shareStatus.textContent =
+                "Result copied to clipboard!";
+
+            window.setTimeout(() => {
+                shareResultButton.textContent =
+                    originalText;
+            }, 1800);
+        } catch (error) {
+            console.error("Could not copy result:", error);
+
+            shareStatus.textContent =
+                "Could not copy the result.";
+        }
     });
 
     displayPuzzleDate();
