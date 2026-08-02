@@ -95,8 +95,8 @@ body {
 }
 
 main {
-    width: min(100rem, calc(100% - 3rem));
-    height: 100%;
+    width: 100%;
+    height: calc(100vh - 110px);
     margin: auto; 
     padding-block: 1rem;
 
@@ -105,18 +105,20 @@ main {
     align-items: center;
     justify-content: space-between;
     gap: 1rem; 
-    padding: 1rem; 
+    padding: 5rem; 
+
+    font-family: var(--font-body);
 }
 
 .secondary-container {
     width: 25vw;
-    height: 50vh;
+    height: fit-content;
     padding: 1rem;
 
     border: 15px solid #83c7ff; 
     border-radius: 36px;
 
-    font-size: 1.3rem; 
+    font-size: 1.36rem; 
 }
 
 .secondary-container h2 {
@@ -190,10 +192,14 @@ main {
 
 .game-board {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
 
-    width: min(78vw, 520px); 
-    aspect-ratio: 1; 
+    grid-template:
+        repeat(6, minmax(0, 1fr))
+        /
+        repeat(6, minmax(0, 1fr));
+
+    width: min(78vw, 520px);
+    aspect-ratio: 1 / 1;
 
     border: 3px solid var(--color-text);
     background: white;
@@ -201,27 +207,27 @@ main {
 
 .cell {
     appearance: none;
-    border: 1px solid var(--color-text);
-    background: white;
-    color: var(--color-text);
+
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 
     display: grid;
     place-items: center;
 
     padding: 0;
+    border: 1px solid var(--color-text);
+
+    background: white;
+    color: var(--color-text);
 
     font-family: var(--font-utility);
     font-size: clamp(1.5rem, 5vw, 2.75rem);
     font-weight: 600;
 
     cursor: pointer;
-    transition:
-        background-color 120ms ease,
-        color 120ms ease;
-}
-
-.cell:hover {
-    background: var(--color-primary-subtle);
 }
 
 .cell[data-state="x"] {
@@ -230,6 +236,16 @@ main {
 
 .cell[data-state="y"] {
     color: var(--color-accent);
+}
+
+.cell--locked {
+    background-color: var(--color-primary-subtle);
+    cursor: default;
+    font-weight: 700;
+}
+
+.cell:disabled {
+    opacity: 1; 
 }
 
 #buttons-container {
