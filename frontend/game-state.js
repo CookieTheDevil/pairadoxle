@@ -64,6 +64,10 @@ export class GameState {
     getSolutionCell(row, col) {
         return this.solution[row][col]; 
     }
+
+    getSolution() {
+        return copyBoard(this.solution);
+    }
     
     getBoard() {
         return copyBoard(this.board);
@@ -71,19 +75,14 @@ export class GameState {
     
     reset() {
         this.board = copyBoard(this.startingBoard);
-        this.hintedCells.clear();
     }
 
     isLocked(row, col) {
         return this.lockedCells[row][col];
     }
 
-    isHinted(row, col) {
-        return this.hintedCells.has(`${row},${col}`);
-    }
-
     cycleCell(row, col) {
-        if ( this.isLocked(row, col) || this.isHinted(row, col) ) {
+        if (this.isLocked(row, col)) {
             return this.getCell(row, col);
         }
 
@@ -104,16 +103,14 @@ export class GameState {
         return nextState;
     }
 
-    applyHint(row, col) {
-        if (this.isLocked(row, col) || this.isHinted(row, col)) {
-            return false; 
+    applyHint(row, col, value) {
+        if (this.isLocked(row, col)) {
+            return false;
         }
 
-        this.board[row][col] = this.solution[row][col];
+        this.board[row][col] = value;
 
-        this.hintedCells.add(`${row},${col}`);
-
-        return true; 
+        return true;
     }
 
     getHintCandidates() {

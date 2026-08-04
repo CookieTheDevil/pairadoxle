@@ -262,20 +262,6 @@ main {
     background-color: white;
 }
 
-.cell--hinted {
-    background-color: #fff4cf;
-    box-shadow: inset 0 0 0 3px #d8a400;
-    cursor: default;
-}
-
-.cell--hinted[data-state="x"] {
-    color: var(--color-primary);
-}
-
-.cell--hinted[data-state="y"] {
-    color: var(--color-accent);
-}
-
 #buttons-container {
     display: grid;
     grid-template-columns: repeat(2, minmax(8rem, 1fr));

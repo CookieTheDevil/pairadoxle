@@ -73,20 +73,39 @@ function initialiseGame() {
                 timer.start();
             },
 
+            onSolved: () => {
+                timer.stop();
+                
+                solvedTime.textContent = timer.getFormattedTime();
+                solvedHints.textContent = String(hintsUsed);
+                shareStatus.textContent = "";
+                
+                if (!solvedModal.open) {
+                    solvedModal.showModal();
+                }
+            }, 
+
             onHintUsed: () => {
                 hintsUsed += 1;
             },
 
-            onSolved: () => {
-                timer.stop();
+            onHintCooldownChange: ({
+                active,
+                remainingMilliseconds
+            }) => {
+                hintButton.disabled = active;
 
-                solvedTime.textContent = timer.getFormattedTime();
-                solvedHints.textContent = String(hintsUsed);
-                shareStatus.textContent = "";
-
-                if (!solvedModal.open) {
-                    solvedModal.showModal();
+                if (!active) {
+                    hintButton.textContent = "Hint";
+                    return;
                 }
+
+                const remainingSeconds = Math.ceil(
+                    remainingMilliseconds / 1000
+                );
+
+                hintButton.textContent =
+                    `Hint (${remainingSeconds})`;
             }
         }
     );
