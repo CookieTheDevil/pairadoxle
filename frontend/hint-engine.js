@@ -18,10 +18,10 @@ import {
  *
  * Returns null when no hint is available.
  */
-export function findHint(board, solution) {
+export function findHint(board, solution, relations = []) {
     return (
         findIncorrectCell(board, solution) ??
-        findDeducibleCell(board, solution) ??
+        findDeducibleCell(board, solution, relations) ??
         findFallbackCell(board, solution)
     );
 }
@@ -60,28 +60,113 @@ function findIncorrectCell(board, solution) {
  * Priority 2:
  * Find a cell that can be deduced from the current rules.
  */
-function findDeducibleCell(board, solution) {
+function findDeducibleCell(board, solution, relations = []) {
     const deductions = [
+        ...findRelationDeductions(board, relations),
         ...findBalanceDeductions(board),
         ...findAdjacentPairDeductions(board),
         ...findSeparatedPairDeductions(board)
     ];
 
-    /*
-     * Several rules may deduce the same cell.
-     * Remove duplicates before choosing one.
-     */
     const uniqueDeductions = removeDuplicateDeductions(deductions);
 
-    /*
-     * The deduction logic should already be correct, but comparing it
-     * with the known solution protects against bugs while developing.
-     */
     const verifiedDeductions = uniqueDeductions.filter((hint) =>
         hint.value === solution[hint.row][hint.col]
     );
 
     return chooseRandom(verifiedDeductions);
+}
+
+function getSecondRelationPosition(relation) {
+    if (relation.direction === "horizontal") {
+        return {
+            row: relation.row,
+            col: relation.col + 1
+        };
+    }
+
+    return {
+        row: relation.row + 1,
+        col: relation.col
+    };
+}
+
+function createRelationDeduction(
+    emptyPosition,
+    knownValue,
+    relation
+) {
+    const requiredValue =
+        relation.type === "same"
+            ? knownValue
+            : getOpposite(knownValue);
+
+    return {
+        row: emptyPosition.row,
+        col: emptyPosition.col,
+        value: requiredValue,
+        type: "deduced",
+        reason:
+            relation.type === "same"
+                ? "These connected cells must contain the same symbol."
+                : "These connected cells must contain different symbols."
+    };
+}
+
+/**
+ * Relation rules:
+ *
+ * X = _  means the empty cell must be X.
+ * X × _  means the empty cell must be Y.
+ *
+ * The same logic works when the empty cell
+ * appears on the other side of the relation.
+ */
+function findRelationDeductions(board, relations) {
+    const deductions = [];
+
+    for (const relation of relations) {
+        const firstPosition = {
+            row: relation.row,
+            col: relation.col
+        };
+
+        const secondPosition = getSecondRelationPosition(relation);
+
+        const firstValue = board[firstPosition.row][firstPosition.col];
+        const secondValue = board[secondPosition.row][secondPosition.col];
+
+        const firstIsEmpty = firstValue === CELL_STATES.EMPTY;
+        const secondIsEmpty = secondValue === CELL_STATES.EMPTY;
+
+        /*
+         * A relation can only directly reveal a value
+         * when exactly one of its cells is empty.
+         */
+        if (firstIsEmpty === secondIsEmpty) {
+            continue;
+        }
+
+        if (firstIsEmpty) {
+            deductions.push(
+                createRelationDeduction(
+                    firstPosition,
+                    secondValue,
+                    relation
+                )
+            );
+        } else {
+            deductions.push(
+                createRelationDeduction(
+                    secondPosition,
+                    firstValue,
+                    relation
+                )
+            );
+        }
+    }
+
+    return deductions;
 }
 
 /**

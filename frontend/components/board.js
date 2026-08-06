@@ -235,7 +235,11 @@ export class GameBoard {
             return false;
         }
 
-        const hint = findHint( this.gameState.getBoard(), this.gameState.getSolution() );
+        const hint = findHint( 
+            this.gameState.getBoard(), 
+            this.gameState.getSolution(),
+            this.gameState.getRelations()
+        );
 
         if (!hint) {
             return false;
