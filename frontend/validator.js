@@ -1,12 +1,16 @@
-import { BOARD_SIZE, CELL_STATES } from "./game-state.js"; 
+import {
+    BOARD_SIZE,
+    CELL_STATES
+} from "./game-state.js";
 
-export function findViolations(board) {
-    const violations = new Set(); 
+export function findViolations(board, relations = []) {
+    const violations = new Set();
 
-    checkThreeInARow(board, violations); 
-    checkBalance(board, violations); 
+    checkThreeInARow(board, violations);
+    checkBalance(board, violations);
+    checkRelations(board, relations, violations);
 
-    return violations; 
+    return violations;
 }
 
 export function isBoardComplete(board) {
@@ -17,10 +21,10 @@ export function isBoardComplete(board) {
     ); 
 }
 
-export function isBoardSolved(board) {
+export function isBoardSolved(board, relations=[]) {
     return ( 
         isBoardComplete(board) &&
-        findViolations(board).size === 0
+        findViolations(board, relations).size === 0
     ); 
 }
 
@@ -109,3 +113,27 @@ function checkBalance(board, violations) {
     }
 }
 
+function checkRelations(board, relations, violations) {
+    for (const relation of relations) {
+        const firstRow = relation.row;
+        const firstCol = relation.col;
+
+        const secondRow = relation.direction === "vertical" ? firstRow + 1 : firstRow;
+
+        const secondCol = relation.direction === "horizontal" ? firstCol + 1 : firstCol;
+
+        const firstValue = board[firstRow][firstCol];
+        const secondValue = board[secondRow][secondCol];
+
+        if ( firstValue === CELL_STATES.EMPTY || secondValue === CELL_STATES.EMPTY ) {
+            continue;
+        }
+
+        const isValid = relation.type === "same" ? firstValue === secondValue : firstValue !== secondValue;
+
+        if (!isValid) {
+            violations.add(`${firstRow},${firstCol}`);
+            violations.add(`${secondRow},${secondCol}`);
+        }
+    }
+}

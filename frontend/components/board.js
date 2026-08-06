@@ -28,7 +28,7 @@ export class GameBoard {
         this.gameState = gameState;
         this.onFirstMove = options.onFirstMove ?? (() => {});
         this.onSolved = options.onSolved ?? (() => {}); 
-        this.onHintUsed = options.onHintUSed ?? (() => {}); 
+        this.onHintUsed = options.onHintUsed ?? (() => {}); 
         this.onHintCooldownChange = options.onHintCooldownChange ?? (() => {}); 
         this.hintCooldownMilliseconds = 5000; 
         this.hintCooldownTimeoutId = null; 
@@ -48,6 +48,8 @@ export class GameBoard {
                 this.boardElement.appendChild(cell);
             }
         }
+
+        this.renderRelations(); 
     }
 
     createCell(row, col) {
@@ -104,13 +106,14 @@ export class GameBoard {
         const board = this.gameState.getBoard(); 
 
         if (
-            !this.hasBeenSolved && 
-            isBoardSolved(board)
+            !this.hasBeenSolved &&
+            isBoardSolved(board, this.gameState.getRelations())
         ) {
-            this.hasBeenSolved = true; 
-            this.isLockedAfterSolve = true; 
-            this.lockBoard(); 
-            this.onSolved(); 
+            this.hasBeenSolved = true;
+            this.isLockedAfterSolve = true;
+            this.cancelHintCooldown();
+            this.lockBoard();
+            this.onSolved();
         }
     }
 
@@ -175,7 +178,8 @@ export class GameBoard {
 
     renderViolations() {
         const violations = findViolations(
-            this.gameState.getBoard()
+            this.gameState.getBoard(),
+            this.gameState.getRelations()
         );
 
         const cells = this.boardElement.querySelectorAll(".cell");
@@ -315,5 +319,39 @@ export class GameBoard {
         }
 
         this.isHintOnCooldown = false;
+    }
+
+    renderRelations() {
+        const relations = this.gameState.getRelations();
+        const cellSizePercent = 100 / BOARD_SIZE;
+
+        relations.forEach((relation) => {
+            const marker = document.createElement("span");
+
+            marker.classList.add(
+                "relation-marker",
+                relation.type === "same"
+                    ? "relation-marker--same"
+                    : "relation-marker--different"
+            );
+
+            marker.setAttribute("aria-hidden", "true");
+
+            if (relation.direction === "horizontal") {
+                marker.style.left =
+                    `${(relation.col + 1) * cellSizePercent}%`;
+
+                marker.style.top =
+                    `${(relation.row + 0.5) * cellSizePercent}%`;
+            } else {
+                marker.style.left =
+                    `${(relation.col + 0.5) * cellSizePercent}%`;
+
+                marker.style.top =
+                    `${(relation.row + 1) * cellSizePercent}%`;
+            }
+
+            this.boardElement.appendChild(marker);
+        });
     }
 }

@@ -32,7 +32,21 @@ const puzzle = {
         ["y", "x", "y", "x", "y", "x"]
     ],
 
-    relations: []
+    // Marked at the lower number, either by row or col
+    relations: [
+        {
+            row: 0,
+            col: 3,
+            direction: "horizontal",
+            type: "same"
+        },
+        {
+            row: 2,
+            col: 1,
+            direction: "vertical",
+            type: "different"
+        }
+    ]
 };
 
 function copyBoard(board) {
@@ -71,6 +85,12 @@ export class GameState {
     
     getBoard() {
         return copyBoard(this.board);
+    }
+
+    getRelations() {
+        return this.puzzle.relations.map((relation) => ({
+            ...relation
+        }));
     }
     
     reset() {
