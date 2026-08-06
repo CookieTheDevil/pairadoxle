@@ -1,9 +1,7 @@
-// hint-engine.js
-
 import {
     BOARD_SIZE,
     CELL_STATES
-} from "./game-state.js";
+} from "./game-constants.js";
 
 /**
  * Returns one hint in this format:

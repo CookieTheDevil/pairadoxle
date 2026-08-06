@@ -1,53 +1,15 @@
-export const BOARD_SIZE = 6;
-export const CELL_STATES = {
-    EMPTY: null, 
-    X: "x",
-    Y: "y"
-}
+import {
+    BOARD_SIZE,
+    CELL_STATES
+} from "./game-constants.js";
 
-/*
- * Temporary puzzle used while building the interface.
- *
- * null means the player can edit the cell.
- * "x" or "y" means the cell starts with that value.
- */
-const puzzle = {
-    id: "test-puzzle-1",
+import {
+    validatePuzzle
+} from "./puzzles/puzzle-validator.js";
 
-    startingBoard: [
-        ["y",  null, null, null, null, "y"],
-        [null, null, null, null, null, null],
-        [null, null, null, null, null, null],
-        [null, null, null, null, null, null],
-        [null, null, null, null, null, null],
-        ["y",  null, null, null, null, "x"]
-    ],
-
-    solution: [
-        ["y", "x", "y", "x", "x", "y"],
-        ["x", "y", "x", "y", "y", "x"],
-        ["x", "y", "y", "x", "x", "y"],
-        ["y", "x", "x", "y", "x", "y"],
-        ["x", "y", "x", "y", "y", "x"],
-        ["y", "x", "y", "x", "y", "x"]
-    ],
-
-    // Marked at the lower number, either by row or col
-    relations: [
-        {
-            row: 0,
-            col: 3,
-            direction: "horizontal",
-            type: "same"
-        },
-        {
-            row: 2,
-            col: 1,
-            direction: "vertical",
-            type: "different"
-        }
-    ]
-};
+import {
+    testPuzzles
+} from "./puzzles/test-puzzles.js";
 
 function copyBoard(board) {
     return board.map((row) => [...row]);
@@ -60,15 +22,15 @@ function createLockedCells(puzzle) {
 }
 
 export class GameState {
-    constructor(currentPuzzle = puzzle) {
+    constructor(currentPuzzle = testPuzzles.standard) {
+        validatePuzzle(currentPuzzle);
+
         this.puzzle = currentPuzzle; 
 
         this.startingBoard = copyBoard(currentPuzzle.startingBoard);
         this.board = copyBoard(currentPuzzle.startingBoard);
         this.solution = copyBoard(currentPuzzle.solution); 
         this.lockedCells = createLockedCells(currentPuzzle.startingBoard);
-
-        this.hintedCells = new Set(); 
     }
 
     getCell(row, col) {

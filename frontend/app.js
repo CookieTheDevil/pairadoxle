@@ -1,6 +1,9 @@
 import { GameState } from "./game-state.js";
 import { GameTimer } from "./timer.js";
 import { GameBoard } from "./components/board.js";
+import {
+    testPuzzles
+} from "./puzzles/test-puzzles.js";
 
 function displayPuzzleDate() {
     const dateElement = document.querySelector("#date"); 
@@ -35,8 +38,25 @@ function initialiseGame() {
     const boardElement = document.querySelector("#game-board");
     const hintButton = document.querySelector("#hint-button");
     const resetButton = document.querySelector("#reset-button");
+    const hintMessage = document.querySelector("#hint-message");
 
-    let hintsUsed = 0; 
+    let hintMessageTimeoutId = null;
+    let hintsUsed = 0;
+
+    function showHintMessage(message) {
+        if (hintMessageTimeoutId !== null) {
+            window.clearTimeout(hintMessageTimeoutId);
+        }
+
+        hintMessage.textContent = message;
+        hintMessage.classList.add("hint-message--visible");
+
+        hintMessageTimeoutId = window.setTimeout(() => {
+            hintMessage.classList.remove("hint-message--visible");
+            hintMessageTimeoutId = null;
+        }, 3500);
+    }
+
     const solvedModal = document.querySelector("#solved-modal"); 
     const solvedTime = document.querySelector("#solved-time"); 
     const solvedHints = document.querySelector("#solved-hints"); 
@@ -50,6 +70,7 @@ function initialiseGame() {
         !timerElement ||
         !resetButton ||
         !hintButton ||
+        !hintMessage ||
         !solvedModal ||
         !solvedTime ||
         !solvedHints ||
@@ -62,7 +83,7 @@ function initialiseGame() {
         );
     }
 
-    const gameState = new GameState();
+    const gameState = new GameState(testPuzzles.standard);              //change testPuzzles.<XXX> for testing
     const timer = new GameTimer(timerElement);
 
     const gameBoard = new GameBoard(
@@ -85,8 +106,9 @@ function initialiseGame() {
                 }
             }, 
 
-            onHintUsed: () => {
+            onHintUsed: (hint) => {
                 hintsUsed += 1;
+                showHintMessage(hint.reason);
             },
 
             onHintCooldownChange: ({
@@ -117,6 +139,14 @@ function initialiseGame() {
         timer.reset();
         hintsUsed = 0;
         shareStatus.textContent = "";
+
+        if (hintMessageTimeoutId !== null) {
+            window.clearTimeout(hintMessageTimeoutId);
+            hintMessageTimeoutId = null;
+        }
+
+        hintMessage.classList.remove("hint-message--visible");
+        hintMessage.textContent = "";
 
         if (solvedModal.open) {
             solvedModal.close(); 

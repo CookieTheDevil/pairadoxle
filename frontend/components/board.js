@@ -1,7 +1,7 @@
 import {
     BOARD_SIZE,
     CELL_STATES
-} from "../game-state.js";
+} from "../game-constants.js";
 
 import {
     findViolations,
