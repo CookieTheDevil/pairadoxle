@@ -6,7 +6,7 @@ import {
 import {
     findViolations,
     isBoardSolved
-} from "../validator.js";
+} from "../tests/validator.js";
 
 import { 
     findHint 
@@ -264,6 +264,7 @@ export class GameBoard {
 
         if (cell) {
             this.renderCell(cell);
+            this.highlightHintCell(cell); 
             cell.focus();
         }
 
@@ -333,6 +334,20 @@ export class GameBoard {
         }
 
         this.isHintOnCooldown = false;
+    }
+
+    highlightHintCell(cell) {
+        cell.classList.remove("cell--hint-highlight");
+
+        // Force the browser to register the removed class,
+        // so repeated hints can replay the animation.
+        void cell.offsetWidth;
+
+        cell.classList.add("cell--hint-highlight");
+
+        window.setTimeout(() => {
+            cell.classList.remove("cell--hint-highlight");
+        }, 1600);
     }
 
     renderRelations() {

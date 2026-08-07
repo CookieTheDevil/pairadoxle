@@ -11,6 +11,9 @@
   --color-accent: #D85A30;
   --color-header: #b4e1ff; 
 
+  --color-hint-highlight: #fff0a8;
+  --color-hint-outline: #e0ac00;
+
   --logo-font-family: "Fraunces", serif;                           /* Display, Logo */
   --font-body: "IBM Plex Sans", sans-serif;                        /* General */
   --font-utility: "IBM Plex Mono", system-ui, monospace;           /* Function-like*/
@@ -339,6 +342,25 @@ main {
 
 .cell--solved:not(.cell--locked) {
     background-color: white;
+}
+
+.cell--hint-highlight {
+    animation: hint-highlight 1.6s ease-out;
+}
+
+@keyframes hint-highlight {
+    0%,
+    35% {
+        background-color: var(--color-hint-highlight);
+        box-shadow:
+            inset 0 0 0 4px var(--color-hint-outline);
+    }
+
+    100% {
+        background-color: white;
+        box-shadow:
+            inset 0 0 0 0 transparent;
+    }
 }
 
 #buttons-container {
