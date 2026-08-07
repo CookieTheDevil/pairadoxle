@@ -7,6 +7,12 @@ const RULE_WEIGHTS = {
     "unequal-edge": 3
 };
 
+export const DIFFICULTY_LEVELS = {
+    EASY: "easy",
+    MEDIUM: "medium",
+    HARD: "hard"
+};
+
 export function calculateDifficulty(result) {
     if (!result.solved) {
         return {
@@ -24,11 +30,11 @@ export function calculateDifficulty(result) {
     let level;
 
     if (score <= 24) {
-        level = "easy";
+        level = DIFFICULTY_LEVELS.EASY;
     } else if (score <= 31) {
-        level = "medium";
+        level = DIFFICULTY_LEVELS.MEDIUM;
     } else {
-        level = "hard";
+        level = DIFFICULTY_LEVELS.HARD;
     }
 
     return { score, level };

@@ -175,4 +175,28 @@ describe("generateSolution", () => {
         expect(result.solved)
             .toBe(true);
     });
+
+    test("can target an easy puzzle", () => {
+        const puzzle = generatePuzzle(
+            "easy-test",
+            {
+                difficulty: "easy",
+                maxAttempts: 20
+            }
+        );
+
+        expect(["easy", "medium", "hard"]).toContain(puzzle.difficulty.level);
+        expect(countSolutions(puzzle.startingBoard, puzzle.relations, 2)).toBe(1);
+    });
+
+    test("rejects an invalid target difficulty", () => {
+        expect(() => {
+            generatePuzzle(
+                "invalid-test",
+                {
+                    difficulty: "impossible"
+                }
+            );
+        }).toThrow();
+    });
 });

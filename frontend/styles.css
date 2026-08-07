@@ -207,6 +207,24 @@ main {
     white-space: nowrap;
 }
 
+#difficulty-message {
+    margin: 0;
+    padding: 0.45rem 1rem;
+
+    border: 2px solid var(--color-primary);
+    border-radius: 999px;
+
+    background: var(--color-primary-subtle);
+    color: var(--color-text);
+
+    font-family: var(--font-utility);
+    font-size: 1.4rem;
+    font-weight: 600;
+    line-height: 1;
+
+    white-space: nowrap;
+}
+
 .timer-icon {
     display: inline-grid;
     place-items: center;

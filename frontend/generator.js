@@ -135,9 +135,59 @@ export function generateStartingBoard(
     return board;
 }
 
-export function generatePuzzle(
-    id = "generated-puzzle"
-) {
+export function generatePuzzle(id = "generated-puzzle", options = {}) {
+    const { difficulty = null, maxAttempts = 20 } = options;
+
+    /*
+     * No requested difficulty:
+     * just generate one valid puzzle.
+     */
+    if (difficulty === null) {
+        return generatePuzzleCandidate(id);
+    }
+
+    const validDifficulties = [
+        "easy",
+        "medium",
+        "hard"
+    ];
+
+    if ( !validDifficulties.includes(difficulty)) {
+        throw new Error(
+            `Invalid difficulty: ${difficulty}`
+        );
+    }
+
+    let closestCandidate = null;
+    let closestDistance = Infinity;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const candidate = generatePuzzleCandidate(id);
+
+        if (candidate.difficulty.level === difficulty) {
+            return candidate;
+        }
+
+        const distance = getDifficultyDistance(
+            candidate.difficulty.score,
+            difficulty
+        );
+
+        if (distance < closestDistance) {
+            closestCandidate = candidate;
+            closestDistance = distance;
+        }
+    }
+
+    /*
+     * We failed to hit the exact band,
+     * so return the closest good puzzle
+     * rather than failing generation.
+     */
+    return closestCandidate;
+}
+
+function generatePuzzleCandidate(id) {
     const solution = generateSolution();
 
     const generated = generateUsefulRelations(solution, 4);
@@ -158,6 +208,37 @@ export function generatePuzzle(
         relations: generated.relations,
         difficulty
     };
+}
+
+function getDifficultyDistance(score, targetDifficulty) {
+    const ranges = {
+        easy: {
+            min: 0,
+            max: 24
+        },
+
+        medium: {
+            min: 25,
+            max: 31
+        },
+
+        hard: {
+            min: 32,
+            max: Infinity
+        }
+    };
+
+    const range = ranges[targetDifficulty];
+
+    if (score >= range.min && score <= range.max) {
+        return 0;
+    }
+
+    if (score < range.min) {
+        return range.min - score;
+    }
+
+    return score - range.max;
 }
 
 function getRelationCandidates(solution) {

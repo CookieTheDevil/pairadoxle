@@ -1,14 +1,31 @@
 import { GameState } from "./game-state.js";
 import { GameTimer } from "./timer.js";
 import { GameBoard } from "./components/board.js";
-import {
-    testPuzzles
-} from "./puzzles/test-puzzles.js";
+import { testPuzzles } from "./puzzles/test-puzzles.js";
+import { solveLogically } from "./logic-solver.js";
+import { calculateDifficulty } from "./difficulty.js";
 import {
     saveProgress,
     loadProgress,
     clearProgress
 } from "./storage.js";
+
+function formatDifficulty(level) {
+    return ( level.charAt(0).toUpperCase() + level.slice(1));
+}
+
+function getPuzzleDifficulty(puzzle) {
+    if (puzzle.difficulty) {
+        return puzzle.difficulty;
+    }
+
+    const result = solveLogically(
+        puzzle.startingBoard,
+        puzzle.relations
+    );
+
+    return calculateDifficulty(result);
+}
 
 function displayPuzzleDate() {
     const dateElement = document.querySelector("#date"); 
@@ -40,6 +57,7 @@ function createShareText(time, hints) {
 
 function initialiseGame() {
     const timerElement = document.querySelector("#timer");
+    const difficultyMessage = document.querySelector( "#difficulty-message" );
     const boardElement = document.querySelector("#game-board");
     const hintButton = document.querySelector("#hint-button");
     const resetButton = document.querySelector("#reset-button");
@@ -73,6 +91,7 @@ function initialiseGame() {
     if (
         !boardElement ||
         !timerElement ||
+        !difficultyMessage ||
         !resetButton ||
         !hintButton ||
         !hintMessage ||
@@ -88,8 +107,13 @@ function initialiseGame() {
         );
     }
 
-    const gameState = new GameState(testPuzzles.standard);              //change testPuzzles.<XXX> for testing
-    const timer = new GameTimer(timerElement);
+    const currentPuzzle = testPuzzles.standard;
+    const gameState = new GameState(currentPuzzle);
+    const timer = new GameTimer(timerElement); 
+
+    const difficulty = getPuzzleDifficulty(currentPuzzle);
+    difficultyMessage.textContent = formatDifficulty(difficulty.level);
+    difficultyMessage.hidden = false;
 
     const gameBoard = new GameBoard(
         boardElement,
@@ -99,17 +123,22 @@ function initialiseGame() {
                 timer.start();
             },
 
+            onBoardChange: () => {
+                saveCurrentProgress();
+            },
+
             onSolved: () => {
                 timer.stop();
-                
+                saveCurrentProgress();
+
                 solvedTime.textContent = timer.getFormattedTime();
                 solvedHints.textContent = String(hintsUsed);
                 shareStatus.textContent = "";
-                
+
                 if (!solvedModal.open) {
                     solvedModal.showModal();
                 }
-            }, 
+            },
 
             onHintUsed: (hint) => {
                 hintsUsed += 1;
@@ -220,6 +249,7 @@ function initialiseGame() {
         gameBoard.reset();
         timer.reset();
         hintsUsed = 0;
+        clearProgress(); 
         shareStatus.textContent = "";
 
         if (hintMessageTimeoutId !== null) {
