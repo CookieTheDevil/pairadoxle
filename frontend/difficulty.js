@@ -23,9 +23,9 @@ export function calculateDifficulty(result) {
 
     let level;
 
-    if (score <= 20) {
+    if (score <= 24) {
         level = "easy";
-    } else if (score <= 40) {
+    } else if (score <= 31) {
         level = "medium";
     } else {
         level = "hard";

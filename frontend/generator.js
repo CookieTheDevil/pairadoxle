@@ -89,10 +89,6 @@ export function generateSolution() {
     return board.map( (row) => [...row] );
 }
 
-import {
-    countSolutions
-} from "./solver.js";
-
 function copyBoard(board) {
     return board.map((row) => [...row]);
 }
