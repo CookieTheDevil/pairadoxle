@@ -7,6 +7,18 @@ import {
     findViolations
 } from "./validator.js";
 
+import {
+    solveLogically
+} from "./logic-solver.js";
+
+import {
+    countSolutions
+} from "./solver.js";
+
+import {
+    calculateDifficulty
+} from "./difficulty.js";
+
 function createEmptyBoard() {
     return Array.from(
         { length: BOARD_SIZE },
@@ -132,19 +144,23 @@ export function generatePuzzle(
 ) {
     const solution = generateSolution();
 
-    const {
-        relations,
-        startingBoard
-    } = generateUsefulRelations(
+    const generated = generateUsefulRelations(solution, 4);
+
+    const startingBoard = makeLogicSolvable(
+        generated.startingBoard,
         solution,
-        4
+        generated.relations
     );
+
+    const result = solveLogically(startingBoard, generated.relations);
+    const difficulty = calculateDifficulty(result);
 
     return {
         id,
         startingBoard,
         solution,
-        relations
+        relations: generated.relations,
+        difficulty
     };
 }
 
@@ -245,4 +261,42 @@ export function generateUsefulRelations(
         startingBoard:
             bestStartingBoard
     };
+}
+
+function makeLogicSolvable(
+    startingBoard,
+    solution,
+    relations = []
+) {
+    const board = copyBoard(startingBoard);
+    const emptyPositions = [];
+
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            if (board[row][col] === CELL_STATES.EMPTY) {
+                emptyPositions.push({ row, col });
+            }
+        }
+    }
+
+    const positions = shuffle(emptyPositions);
+    let result = solveLogically(board, relations);
+    
+    if (result.solved) {
+        return board;
+    }
+
+    for (const { row, col } of positions) {
+        board[row][col] = solution[row][col];
+
+        result = solveLogically(board, relations);
+
+        if (result.solved) {
+            return board;
+        }
+    }
+
+    throw new Error(
+        "Could not create a logically solvable puzzle."
+    );
 }

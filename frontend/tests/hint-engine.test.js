@@ -4,7 +4,11 @@ import {
     test
 } from "vitest";
 
-import { findHint } from "../hint-engine.js";
+
+import {
+    findHint,
+    findLogicalDeductions
+} from "../hint-engine.js";
 
 const SOLUTION = [
     ["y", "x", "y", "x", "x", "y"],
@@ -212,5 +216,46 @@ describe("findHint", () => {
         expect(hint.row).toBe(2);
         expect(hint.col).toBe(5);
         expect(hint.value).toBe("y");
+    });
+
+    test("findLogicalDeductions works without a solution", () => {
+        const board = emptyBoard();
+
+        board[0][0] = "y";
+        board[0][2] = "y";
+
+        const deductions = findLogicalDeductions(board, []);
+
+        expect(
+            deductions.some(
+                (hint) =>
+                    hint.row === 0 &&
+                    hint.col === 1 &&
+                    hint.value === "x"
+            )
+        ).toBe(true);
+    });
+
+    test("logical deductions identify their rule", () => {
+        const board = emptyBoard();
+
+        board[0][0] = "y";
+        board[0][2] = "y";
+
+        const deductions =
+            findLogicalDeductions(
+                board,
+                []
+            );
+
+        const deduction =
+            deductions.find(
+                (item) =>
+                    item.row === 0 &&
+                    item.col === 1
+            );
+
+        expect(deduction.rule)
+            .toBe("separated-pair");
     });
 });

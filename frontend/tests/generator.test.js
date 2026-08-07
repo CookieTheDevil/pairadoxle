@@ -21,6 +21,10 @@ import {
     isBoardSolved
 } from "../validator.js";
 
+import {
+    solveLogically
+} from "../logic-solver.js";
+
 describe("generateSolution", () => {
     test("generates a complete board", () => {
         const board = generateSolution();
@@ -39,113 +43,136 @@ describe("generateSolution", () => {
             expect( isBoardSolved(board) ).toBe(true);
         }
     });
-});
 
-test("generates a uniquely solvable starting board", () => {
-    const solution = generateSolution();
-    const startingBoard = generateStartingBoard(solution);
+    test("generates a uniquely solvable starting board", () => {
+        const solution = generateSolution();
+        const startingBoard = generateStartingBoard(solution);
 
-    expect(
-        countSolutions(
-            startingBoard,
-            [],
-            2
-        )
-    ).toBe(1);
-});
-
-test("removes at least one clue", () => {
-    const solution = generateSolution();
-    const startingBoard = generateStartingBoard(solution);
-
-    const emptyCount =
-        startingBoard
-            .flat()
-            .filter(
-                (cell) => cell === null
+        expect(
+            countSolutions(
+                startingBoard,
+                [],
+                2
             )
-            .length;
+        ).toBe(1);
+    });
 
-    expect(emptyCount).toBeGreaterThan(0);
-});
+    test("removes at least one clue", () => {
+        const solution = generateSolution();
+        const startingBoard = generateStartingBoard(solution);
 
-test("generates a valid puzzle object", () => {
-    const puzzle = generatePuzzle("test-generated");
+        const emptyCount =
+            startingBoard
+                .flat()
+                .filter(
+                    (cell) => cell === null
+                )
+                .length;
 
-    expect(puzzle.id).toBe("test-generated");
+        expect(emptyCount).toBeGreaterThan(0);
+    });
 
-    expect(
-        isBoardSolved(puzzle.solution)
-    ).toBe(true);
+    test("generates a valid puzzle object", () => {
+        const puzzle = generatePuzzle("test-generated");
 
-    expect(
-        countSolutions(
-            puzzle.startingBoard,
-            puzzle.relations,
-            2
-        )
-    ).toBe(1);
-});
+        expect(puzzle.id).toBe("test-generated");
+        expect(isBoardSolved(puzzle.solution)).toBe(true);
 
-test("generates relation clues that agree with the solution", () => {
-    const solution = generateSolution();
-    const relations = generateRelations(solution, 6);
+        expect(
+            countSolutions(
+                puzzle.startingBoard,
+                puzzle.relations,
+                2
+            )
+        ).toBe(1);
 
-    for (const relation of relations) {
-        const first = solution[relation.row][relation.col];
+        expect(puzzle.difficulty).toBeDefined();
+        expect(puzzle.difficulty.score).toBeGreaterThan(0);
+        expect([
+            "easy",
+            "medium",
+            "hard"
+        ]).toContain(
+            puzzle.difficulty.level
+        );
+    });
 
-        const second = relation.direction === "horizontal"
-            ? solution[relation.row][relation.col + 1]
-            : solution[relation.row + 1][relation.col];
+    test("generates relation clues that agree with the solution", () => {
+        const solution = generateSolution();
+        const relations = generateRelations(solution, 6);
 
-        if (relation.type === "same") {
-            expect(first).toBe(second);
-        } else {
-            expect(first).not.toBe(second);
+        for (const relation of relations) {
+            const first = solution[relation.row][relation.col];
+
+            const second = relation.direction === "horizontal"
+                ? solution[relation.row][relation.col + 1]
+                : solution[relation.row + 1][relation.col];
+
+            if (relation.type === "same") {
+                expect(first).toBe(second);
+            } else {
+                expect(first).not.toBe(second);
+            }
         }
-    }
-});
+    });
 
-test("generated puzzle remains uniquely solvable with relations", () => {
-    const puzzle = generatePuzzle("relation-test");
+    test("generated puzzle remains uniquely solvable with relations", () => {
+        const puzzle = generatePuzzle("relation-test");
 
-    expect(
-        countSolutions(
-            puzzle.startingBoard,
-            puzzle.relations,
-            2
-        )
-    ).toBe(1);
-});
+        expect(
+            countSolutions(
+                puzzle.startingBoard,
+                puzzle.relations,
+                2
+            )
+        ).toBe(1);
+    });
 
-test("useful relations preserve uniqueness", () => {
-    const solution = generateSolution();
+    test("useful relations preserve uniqueness", () => {
+        const solution = generateSolution();
 
-    const { relations, startingBoard } =
-        generateUsefulRelations(
-            solution,
-            4
-        );
+        const { relations, startingBoard } =
+            generateUsefulRelations(
+                solution,
+                4
+            );
 
-    expect(
-        countSolutions(
-            startingBoard,
-            relations,
-            2
-        )
-    ).toBe(1);
-});
+        expect(
+            countSolutions(
+                startingBoard,
+                relations,
+                2
+            )
+        ).toBe(1);
+    });
 
-test("does not exceed the relation limit", () => {
-    const solution = generateSolution();
+    test("does not exceed the relation limit", () => {
+        const solution = generateSolution();
 
-    const { relations } =
-        generateUsefulRelations(
-            solution,
-            4
-        );
+        const { relations } =
+            generateUsefulRelations(
+                solution,
+                4
+            );
 
-    expect(
-        relations.length
-    ).toBeLessThanOrEqual(4);
+        expect(
+            relations.length
+        ).toBeLessThanOrEqual(4);
+    });
+
+    test("generated puzzle can be solved without guessing", () => {
+        const puzzle =
+            generatePuzzle(
+                "logic-test"
+            );
+
+        const result =
+            solveLogically(
+                puzzle.startingBoard,
+                puzzle.relations
+            );
+
+        expect(result.solved)
+            .toBe(true);
+    });
 });

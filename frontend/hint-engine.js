@@ -24,6 +24,22 @@ export function findHint(board, solution, relations = []) {
     );
 }
 
+export function findLogicalDeductions(
+    board,
+    relations = []
+) {
+    const deductions = [
+        ...findRelationDeductions(board, relations),
+        ...findBalanceDeductions(board),
+        ...findAdjacentPairDeductions(board),
+        ...findSeparatedPairDeductions(board),
+        ...findEqualEdge(board),
+        ...findUnequalEdge(board)
+    ];
+
+    return removeDuplicateDeductions(deductions);
+}
+
 /**
  * Priority 1:
  * Find a filled cell whose value differs from the solution.
@@ -59,24 +75,11 @@ function findIncorrectCell(board, solution) {
  * Find a cell that can be deduced from the current rules.
  */
 function findDeducibleCell(board, solution, relations = []) {
-    const deductions = [
-        ...findRelationDeductions(board, relations),
-        ...findBalanceDeductions(board),
-        ...findAdjacentPairDeductions(board),
-        ...findSeparatedPairDeductions(board),
-        ...findEqualEdge(board),
-        ...findUnequalEdge(board)
-    ];
+    const deductions = findLogicalDeductions(board, relations);
 
-    const uniqueDeductions = removeDuplicateDeductions(deductions);
-
-    console.log( "logical deductions:", uniqueDeductions );
-
-    const verifiedDeductions = uniqueDeductions.filter((hint) =>
+    const verifiedDeductions = deductions.filter( (hint) =>
         hint.value === solution[hint.row][hint.col]
     );
-
-    console.log( "verified deductions:", verifiedDeductions );
 
     return chooseRandom(verifiedDeductions);
 }
@@ -110,6 +113,7 @@ function createRelationDeduction(
         col: emptyPosition.col,
         value: requiredValue,
         type: "deduced",
+        rule: "relation",
         reason:
             relation.type === "same"
                 ? "These connected cells must contain the same symbol."
@@ -250,6 +254,7 @@ function addBalanceDeductions(
             col,
             value: requiredValue,
             type: "deduced",
+            rule: "balance",
             reason:
                 `${locationName} already contains the maximum ` +
                 `number of the other symbol.`
@@ -288,6 +293,7 @@ function findAdjacentPairDeductions(board) {
                     col: col - 1,
                     value: opposite,
                     type: "deduced",
+                    rule: "adjacent-pair",
                     reason:
                         "Three identical symbols cannot appear horizontally."
                 });
@@ -302,6 +308,7 @@ function findAdjacentPairDeductions(board) {
                     col: col + 2,
                     value: opposite,
                     type: "deduced",
+                    rule: "adjacent-pair",
                     reason:
                         "Three identical symbols cannot appear horizontally."
                 });
@@ -329,6 +336,7 @@ function findAdjacentPairDeductions(board) {
                     col,
                     value: opposite,
                     type: "deduced",
+                    rule: "adjacent-pair",
                     reason:
                         "Three identical symbols cannot appear vertically."
                 });
@@ -343,6 +351,7 @@ function findAdjacentPairDeductions(board) {
                     col,
                     value: opposite,
                     type: "deduced",
+                    rule: "adjacent-pair",
                     reason:
                         "Three identical symbols cannot appear vertically."
                 });
@@ -378,6 +387,7 @@ function findSeparatedPairDeductions(board) {
                     col: col + 1,
                     value: getOpposite(first),
                     type: "deduced",
+                    rule: "separated-pair",
                     reason:
                         "The middle symbol must differ from both neighbours."
                 });
@@ -401,6 +411,7 @@ function findSeparatedPairDeductions(board) {
                     col,
                     value: getOpposite(first),
                     type: "deduced",
+                    rule: "separated-pair",
                     reason:
                         "The middle symbol must differ from both neighbours."
                 });
@@ -438,6 +449,7 @@ function findEqualEdge(board) {
                     col: 1,
                     value: getOpposite(first),
                     type: "deduced", 
+                    rule: "equal-edge",
                     reason:
                         "The ends of the row are equal, so this cell must contain the opposite symbol."
                 });
@@ -449,6 +461,7 @@ function findEqualEdge(board) {
                     col: BOARD_SIZE-2,
                     value: getOpposite(last),
                     type: "deduced", 
+                    rule: "equal-edge",
                     reason:
                         "The ends of the row are equal, so this cell must contain the opposite symbol."
                 });
@@ -471,10 +484,11 @@ function findEqualEdge(board) {
                 deductions.push({
                     row: 1,
                     col,
-                    type: "deduced",
                     value: getOpposite(top),
+                    type: "deduced",
+                    rule: "equal-edge",
                     reason:
-    "The ends of the column are equal, so this cell must contain the opposite symbol."
+                        "The ends of the column are equal, so this cell must contain the opposite symbol."
                 })
             }
 
@@ -482,8 +496,9 @@ function findEqualEdge(board) {
                 deductions.push({
                     row: BOARD_SIZE-2,
                     col,
-                    type: "deduced",
                     value: getOpposite(bottom),
+                    type: "deduced",
+                    rule: "equal-edge",
                     reason:
                         "The ends of the column are equal, so this cell must contain the opposite symbol."
                 })
