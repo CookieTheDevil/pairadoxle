@@ -9,6 +9,16 @@ import {
     loadProgress,
     clearProgress
 } from "./storage.js";
+import { generatePuzzle } from "./generator.js";
+
+function getDailyPuzzleId() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+}
 
 function formatDifficulty(level) {
     return ( level.charAt(0).toUpperCase() + level.slice(1));
@@ -107,7 +117,8 @@ function initialiseGame() {
         );
     }
 
-    const currentPuzzle = testPuzzles.standard;
+    const puzzleId = getDailyPuzzleId();
+    const currentPuzzle = generatePuzzle(puzzleId);
     const gameState = new GameState(currentPuzzle);
     const timer = new GameTimer(timerElement); 
 

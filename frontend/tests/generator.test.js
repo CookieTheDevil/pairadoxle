@@ -199,4 +199,18 @@ describe("generateSolution", () => {
             );
         }).toThrow();
     });
+
+    test("same puzzle id generates the same puzzle", () => {
+        const first = generatePuzzle("2026-08-08");
+        const second = generatePuzzle("2026-08-08");
+
+        expect(second).toEqual(first);
+    });
+
+    test("different puzzle ids generate different puzzles", () => {
+        const first = generatePuzzle("2026-08-08");
+        const second = generatePuzzle("2026-08-09");
+
+        expect(second.solution).not.toEqual(first.solution);
+    });
 });

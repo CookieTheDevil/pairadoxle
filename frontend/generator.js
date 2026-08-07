@@ -19,18 +19,31 @@ import {
     calculateDifficulty
 } from "./difficulty.js";
 
+import {
+    createSeededRandom
+} from "./random.js";
+
 function createEmptyBoard() {
     return Array.from(
         { length: BOARD_SIZE },
-        () => Array(BOARD_SIZE).fill(CELL_STATES.EMPTY)
+        () =>
+            Array(BOARD_SIZE).fill(
+                CELL_STATES.EMPTY
+            )
     );
 }
 
-function shuffle(values) {
+function copyBoard(board) {
+    return board.map(
+        (row) => [...row]
+    );
+}
+
+function shuffle(values, random = Math.random) {
     const copy = [...values];
 
     for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
+        const j = Math.floor(random() * (i + 1));
         [copy[i], copy[j]] = [copy[j], copy[i]];
     }
 
@@ -49,7 +62,8 @@ function findFirstEmptyCell(board) {
     return null;
 }
 
-function fillBoard(board) {
+
+function fillBoard(board, random = Math.random) {
     const emptyCell = findFirstEmptyCell(board);
 
     if (!emptyCell) {
@@ -58,15 +72,20 @@ function fillBoard(board) {
 
     const { row, col } = emptyCell;
 
-    const candidates = shuffle([
-        CELL_STATES.X,
-        CELL_STATES.Y
-    ]);
+    const candidates =
+        shuffle(
+            [
+                CELL_STATES.X,
+                CELL_STATES.Y
+            ],
+            random
+        );
 
     for (const candidate of candidates) {
-        board[row][col] = candidate;
+        board[row][col] =
+            candidate;
 
-        if ( findViolations(board).size === 0 && fillBoard(board) ) {
+        if (findViolations(board).size === 0 && fillBoard(board, random)) {
             return true;
         }
 
@@ -76,9 +95,10 @@ function fillBoard(board) {
     return false;
 }
 
-export function generateSolution() {
+
+export function generateSolution(random = Math.random) {
     const board = createEmptyBoard();
-    const generated = fillBoard(board);
+    const generated = fillBoard(board, random);
 
     if (!generated) {
         throw new Error(
@@ -86,12 +106,9 @@ export function generateSolution() {
         );
     }
 
-    return board.map( (row) => [...row] );
+    return copyBoard(board);
 }
 
-function copyBoard(board) {
-    return board.map((row) => [...row]);
-}
 
 function getAllPositions() {
     const positions = [];
@@ -105,16 +122,21 @@ function getAllPositions() {
     return positions;
 }
 
-//generates a minimal board with only one solution
+
+/*
+ * Removes as many fixed cells as possible
+ * while preserving exactly one solution.
+ */
 export function generateStartingBoard(
     solution,
-    relations = []
+    relations = [],
+    random = Math.random
 ) {
     const board = copyBoard(solution);
 
-    const positions = shuffle(getAllPositions());
+    const positions = shuffle(getAllPositions(), random);
 
-    for (const { row, col } of positions) {
+    for ( const { row, col } of positions ) {
         const previousValue = board[row][col];
 
         board[row][col] = CELL_STATES.EMPTY;
@@ -135,15 +157,31 @@ export function generateStartingBoard(
     return board;
 }
 
+
 export function generatePuzzle(id = "generated-puzzle", options = {}) {
     const { difficulty = null, maxAttempts = 20 } = options;
 
+    if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
+        throw new Error(
+            "maxAttempts must be a positive integer."
+        );
+    }
+
     /*
-     * No requested difficulty:
-     * just generate one valid puzzle.
+     * Every random decision for this puzzle
+     * now comes from this deterministic RNG.
+     */
+    const random = createSeededRandom(id);
+
+    /*
+     * Normal daily generation:
+     * don't target a difficulty.
      */
     if (difficulty === null) {
-        return generatePuzzleCandidate(id);
+        return generatePuzzleCandidate(
+            id,
+            random
+        );
     }
 
     const validDifficulties = [
@@ -152,7 +190,7 @@ export function generatePuzzle(id = "generated-puzzle", options = {}) {
         "hard"
     ];
 
-    if ( !validDifficulties.includes(difficulty)) {
+    if (!validDifficulties.includes(difficulty)) {
         throw new Error(
             `Invalid difficulty: ${difficulty}`
         );
@@ -162,7 +200,10 @@ export function generatePuzzle(id = "generated-puzzle", options = {}) {
     let closestDistance = Infinity;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        const candidate = generatePuzzleCandidate(id);
+        const candidate = generatePuzzleCandidate(
+            id,
+            random
+        );
 
         if (candidate.difficulty.level === difficulty) {
             return candidate;
@@ -179,26 +220,28 @@ export function generatePuzzle(id = "generated-puzzle", options = {}) {
         }
     }
 
-    /*
-     * We failed to hit the exact band,
-     * so return the closest good puzzle
-     * rather than failing generation.
-     */
     return closestCandidate;
 }
 
-function generatePuzzleCandidate(id) {
-    const solution = generateSolution();
 
-    const generated = generateUsefulRelations(solution, 4);
+function generatePuzzleCandidate(id, random) {
+    const solution = generateSolution(random);
+    const generated = generateUsefulRelations(solution, 4, random);
 
-    const startingBoard = makeLogicSolvable(
-        generated.startingBoard,
-        solution,
-        generated.relations
-    );
+    const startingBoard =
+        makeLogicSolvable(
+            generated.startingBoard,
+            solution,
+            generated.relations,
+            random
+        );
 
-    const result = solveLogically(startingBoard, generated.relations);
+    const result =
+        solveLogically(
+            startingBoard,
+            generated.relations
+        );
+
     const difficulty = calculateDifficulty(result);
 
     return {
@@ -244,6 +287,9 @@ function getDifficultyDistance(score, targetDifficulty) {
 function getRelationCandidates(solution) {
     const candidates = [];
 
+    /*
+     * Horizontal relations.
+     */
     for (let row = 0; row < BOARD_SIZE; row++) {
         for (let col = 0; col < BOARD_SIZE - 1; col++) {
             candidates.push({
@@ -258,6 +304,9 @@ function getRelationCandidates(solution) {
         }
     }
 
+    /*
+     * Vertical relations.
+     */
     for (let row = 0; row < BOARD_SIZE - 1; row++) {
         for (let col = 0; col < BOARD_SIZE; col++) {
             candidates.push({
@@ -277,11 +326,13 @@ function getRelationCandidates(solution) {
 
 export function generateRelations(
     solution,
-    maxRelations = 4
+    maxRelations = 4,
+    random = Math.random
 ) {
     const candidates =
-        shuffle(
-            getRelationCandidates(solution)
+        shuffle( 
+            getRelationCandidates(solution),
+            random
         );
 
     return candidates.slice(
@@ -296,20 +347,41 @@ export function generateRelations(
 function countFilledCells(board) {
     return board
         .flat()
-        .filter((cell) => cell !== CELL_STATES.EMPTY)
+        .filter(
+            (cell) =>
+                cell !==
+                CELL_STATES.EMPTY
+        )
         .length;
 }
 
+/*
+ * Keeps relation clues only when they allow
+ * the puzzle to use fewer fixed X/Y clues.
+ */
 export function generateUsefulRelations(
     solution,
-    maxRelations = 4
+    maxRelations = 4,
+    random = Math.random
 ) {
     let relations = [];
-    let bestStartingBoard = generateStartingBoard(solution, relations);
+
+    let bestStartingBoard =
+        generateStartingBoard(
+            solution,
+            relations,
+            random
+        );
 
     let bestFilledCount = countFilledCells(bestStartingBoard);
 
-    const candidates = shuffle(getRelationCandidates(solution));
+    const candidates =
+        shuffle(
+            getRelationCandidates(
+                solution
+            ),
+            random
+        );
 
     for (const candidate of candidates) {
         if (relations.length >= maxRelations) {
@@ -321,7 +393,8 @@ export function generateUsefulRelations(
         const testStartingBoard =
             generateStartingBoard(
                 solution,
-                testRelations
+                testRelations,
+                random
             );
 
         const testFilledCount = countFilledCells(testStartingBoard);
@@ -335,15 +408,21 @@ export function generateUsefulRelations(
 
     return {
         relations,
-        startingBoard:
-            bestStartingBoard
+        startingBoard: bestStartingBoard
     };
 }
 
+
+/*
+ * If a unique puzzle cannot be solved using
+ * our supported logical rules, restore fixed
+ * clues until the logic solver can complete it.
+ */
 function makeLogicSolvable(
     startingBoard,
     solution,
-    relations = []
+    relations = [],
+    random = Math.random
 ) {
     const board = copyBoard(startingBoard);
     const emptyPositions = [];
@@ -356,9 +435,10 @@ function makeLogicSolvable(
         }
     }
 
-    const positions = shuffle(emptyPositions);
+    const positions = shuffle(emptyPositions, random);
+
     let result = solveLogically(board, relations);
-    
+
     if (result.solved) {
         return board;
     }
