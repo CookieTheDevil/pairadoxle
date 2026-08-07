@@ -37,6 +37,7 @@ export class GameBoard {
         this.hasBeenSolved = false; 
         this.isLockedAfterSolve = false; 
         this.violationTimeoutId = null; 
+        this.onBoardChange = options.onBoardChange ?? (() => {}); 
     }
 
     create() {
@@ -95,6 +96,8 @@ export class GameBoard {
 
         this.gameState.cycleCell(row, col);
         this.renderCell(cell);
+
+        this.onBoardChange(); 
 
         if (previousState === CELL_STATES.EMPTY) {
             this.scheduleViolationRender(450);
@@ -251,6 +254,7 @@ export class GameBoard {
         }
 
         const applied = this.gameState.applyHint( hint.row, hint.col, hint.value );
+        this.onBoardChange(); 
 
         if (!applied) {
             return false;
@@ -271,7 +275,13 @@ export class GameBoard {
 
         const board = this.gameState.getBoard();
 
-        if ( !this.hasBeenSolved && isBoardSolved(board) ) {
+        if (
+            !this.hasBeenSolved &&
+            isBoardSolved(
+                board,
+                this.gameState.getRelations()
+            )
+        ) {
             this.hasBeenSolved = true;
             this.isLockedAfterSolve = true;
 
@@ -357,5 +367,9 @@ export class GameBoard {
 
             this.boardElement.appendChild(marker);
         });
+    }
+
+    setHasProgress(hasProgress) {
+        this.hasMadeFirstMove = hasProgress;
     }
 }

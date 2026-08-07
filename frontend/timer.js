@@ -80,4 +80,25 @@ export class GameTimer {
             `${String(seconds).padStart(2, "0")}`
         );
     }
+
+    setElapsedMilliseconds(milliseconds) {
+        if (
+            !Number.isFinite(milliseconds) ||
+            milliseconds < 0
+        ) {
+            return false;
+        }
+
+        if (this.intervalId !== null) {
+            window.clearInterval(this.intervalId);
+        }
+
+        this.intervalId = null;
+        this.startedAt = null;
+        this.elapsedBeforeStart = milliseconds;
+
+        this.render(milliseconds);
+
+        return true;
+    }
 }

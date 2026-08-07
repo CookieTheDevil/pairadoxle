@@ -4,6 +4,11 @@ import { GameBoard } from "./components/board.js";
 import {
     testPuzzles
 } from "./puzzles/test-puzzles.js";
+import {
+    saveProgress,
+    loadProgress,
+    clearProgress
+} from "./storage.js";
 
 function displayPuzzleDate() {
     const dateElement = document.querySelector("#date"); 
@@ -132,7 +137,84 @@ function initialiseGame() {
         }
     );
 
-    gameBoard.create();
+    function restoreSavedProgress() {
+        const saved = loadProgress();
+
+        if (!saved) {
+            return;
+        }
+
+        if ( saved.puzzleId !== gameState.getPuzzleId() ) {
+            clearProgress();
+            return;
+        }
+
+        const boardWasRestored = gameState.setBoard(saved.board);
+
+        if (!boardWasRestored) {
+            clearProgress();
+            return;
+        }
+
+        if (
+            Number.isFinite(saved.elapsedMilliseconds) &&
+            saved.elapsedMilliseconds >= 0
+        ) {
+            timer.setElapsedMilliseconds(
+                saved.elapsedMilliseconds
+            );
+        }
+
+        if (
+            Number.isInteger(saved.hintsUsed) &&
+            saved.hintsUsed >= 0
+        ) {
+            hintsUsed = saved.hintsUsed;
+        }
+
+        gameBoard.render();
+        gameBoard.renderViolations();
+
+        if (saved.solved) {
+            gameBoard.hasBeenSolved = true;
+            gameBoard.isLockedAfterSolve = true;
+
+            gameBoard.lockBoard();
+            hintButton.disabled = true;
+        } else if (saved.hasStarted) {
+            gameBoard.setHasProgress(true);
+            timer.start();
+        }
+    }
+
+    window.setInterval(() => {
+        if (
+            gameBoard.hasMadeFirstMove &&
+            !gameBoard.hasBeenSolved
+        ) {
+            saveCurrentProgress();
+        }
+    }, 5000);
+
+    window.addEventListener("beforeunload", () => {
+        if (gameBoard.hasMadeFirstMove) {
+            saveCurrentProgress();
+        }
+    });
+
+    function saveCurrentProgress() {
+        saveProgress({
+            puzzleId: gameState.getPuzzleId(),
+            board: gameState.getBoard(),
+
+            elapsedMilliseconds:
+                timer.getElapsedMilliseconds(),
+
+            hintsUsed,
+            solved: gameBoard.hasBeenSolved,
+            hasStarted: gameBoard.hasMadeFirstMove
+        });
+    }
 
     resetButton.addEventListener("click", () => {
         gameBoard.reset();
@@ -195,6 +277,8 @@ function initialiseGame() {
         }
     });
 
+    gameBoard.create();
+    restoreSavedProgress(); 
     displayPuzzleDate();
 }
 

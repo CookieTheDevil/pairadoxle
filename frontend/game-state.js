@@ -115,4 +115,26 @@ export class GameState {
 
         return candidates;
     }
+
+    setBoard(board) {
+        const validBoard =
+            Array.isArray(board) &&
+            board.length === BOARD_SIZE &&
+            board.every(
+                (row) =>
+                    Array.isArray(row) &&
+                    row.length === BOARD_SIZE
+            );
+
+        if (!validBoard) {
+            return false;
+        }
+
+        this.board = copyBoard(board);
+        return true;
+    }
+
+    getPuzzleId() {
+        return this.puzzle.id;
+    }
 }
