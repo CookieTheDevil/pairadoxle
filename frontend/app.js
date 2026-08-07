@@ -1,7 +1,6 @@
 import { GameState } from "./game-state.js";
 import { GameTimer } from "./timer.js";
 import { GameBoard } from "./components/board.js";
-import { testPuzzles } from "./puzzles/test-puzzles.js";
 import { solveLogically } from "./logic-solver.js";
 import { calculateDifficulty } from "./difficulty.js";
 import {
@@ -9,16 +8,11 @@ import {
     loadProgress,
     clearProgress
 } from "./storage.js";
+import {
+    getDailyPuzzleId,
+    formatPuzzleDate
+} from "./daily-puzzle.js";
 import { generatePuzzle } from "./generator.js";
-
-function getDailyPuzzleId() {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
-}
 
 function formatDifficulty(level) {
     return ( level.charAt(0).toUpperCase() + level.slice(1));
@@ -37,20 +31,14 @@ function getPuzzleDifficulty(puzzle) {
     return calculateDifficulty(result);
 }
 
-function displayPuzzleDate() {
-    const dateElement = document.querySelector("#date"); 
+function displayPuzzleDate(puzzleId) {
+    const dateElement = document.querySelector("#date");
 
     if (!dateElement) {
-        return; 
+        return;
     }
 
-    const today = new Date();
-
-    dateElement.textContent = new Intl.DateTimeFormat("nb-NO", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric"
-    }).format(today);
+    dateElement.textContent = formatPuzzleDate(puzzleId);
 }
 
 function createShareText(time, hints) {
@@ -320,7 +308,7 @@ function initialiseGame() {
 
     gameBoard.create();
     restoreSavedProgress(); 
-    displayPuzzleDate();
+    displayPuzzleDate(currentPuzzle.id);
 }
 
 initialiseGame();
