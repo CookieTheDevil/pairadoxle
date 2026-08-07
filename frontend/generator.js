@@ -76,3 +76,173 @@ export function generateSolution() {
 
     return board.map( (row) => [...row] );
 }
+
+import {
+    countSolutions
+} from "./solver.js";
+
+function copyBoard(board) {
+    return board.map((row) => [...row]);
+}
+
+function getAllPositions() {
+    const positions = [];
+
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            positions.push({ row, col });
+        }
+    }
+
+    return positions;
+}
+
+//generates a minimal board with only one solution
+export function generateStartingBoard(
+    solution,
+    relations = []
+) {
+    const board = copyBoard(solution);
+
+    const positions = shuffle(getAllPositions());
+
+    for (const { row, col } of positions) {
+        const previousValue = board[row][col];
+
+        board[row][col] = CELL_STATES.EMPTY;
+
+        const solutionCount =
+            countSolutions(
+                board,
+                relations,
+                2
+            );
+
+        if (solutionCount !== 1) {
+            board[row][col] =
+                previousValue;
+        }
+    }
+
+    return board;
+}
+
+export function generatePuzzle(
+    id = "generated-puzzle"
+) {
+    const solution = generateSolution();
+
+    const {
+        relations,
+        startingBoard
+    } = generateUsefulRelations(
+        solution,
+        4
+    );
+
+    return {
+        id,
+        startingBoard,
+        solution,
+        relations
+    };
+}
+
+function getRelationCandidates(solution) {
+    const candidates = [];
+
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE - 1; col++) {
+            candidates.push({
+                row,
+                col,
+                direction: "horizontal",
+                type:
+                    solution[row][col] === solution[row][col + 1]
+                        ? "same"
+                        : "different"
+            });
+        }
+    }
+
+    for (let row = 0; row < BOARD_SIZE - 1; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            candidates.push({
+                row,
+                col,
+                direction: "vertical",
+                type:
+                    solution[row][col] === solution[row + 1][col]
+                        ? "same"
+                        : "different"
+            });
+        }
+    }
+
+    return candidates;
+}
+
+export function generateRelations(
+    solution,
+    maxRelations = 4
+) {
+    const candidates =
+        shuffle(
+            getRelationCandidates(solution)
+        );
+
+    return candidates.slice(
+        0,
+        Math.min(
+            maxRelations,
+            candidates.length
+        )
+    );
+}
+
+function countFilledCells(board) {
+    return board
+        .flat()
+        .filter((cell) => cell !== CELL_STATES.EMPTY)
+        .length;
+}
+
+export function generateUsefulRelations(
+    solution,
+    maxRelations = 4
+) {
+    let relations = [];
+    let bestStartingBoard = generateStartingBoard(solution, relations);
+
+    let bestFilledCount = countFilledCells(bestStartingBoard);
+
+    const candidates = shuffle(getRelationCandidates(solution));
+
+    for (const candidate of candidates) {
+        if (relations.length >= maxRelations) {
+            break;
+        }
+
+        const testRelations = [...relations, candidate];
+
+        const testStartingBoard =
+            generateStartingBoard(
+                solution,
+                testRelations
+            );
+
+        const testFilledCount = countFilledCells(testStartingBoard);
+
+        if (testFilledCount < bestFilledCount) {
+            relations = testRelations;
+            bestStartingBoard = testStartingBoard;
+            bestFilledCount = testFilledCount;
+        }
+    }
+
+    return {
+        relations,
+        startingBoard:
+            bestStartingBoard
+    };
+}
