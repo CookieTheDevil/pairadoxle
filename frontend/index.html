@@ -18,15 +18,36 @@
         </header>
         <main>
             <div id="rules-container" class="secondary-container">
-                <h2>How to play</h2>
-                <p>The goal is to fill every cell of the grid with either X or Y. When filled, the grid must follow these rules:</p>
-                <ol>
-                    <li>Each row and column contains the same amount of X and Y.</li>
-                    <li>No more than two X or Y can be adjacent, either vertically or horizontally.</li>
-                    <li>If two cells have ‘=’ between them, they must contain the same symbol.</li>
-                    <li>If two cells have ‘╳’ between them, they cannot contain the same symbol.</li>
-                </ol>
-                <p>There's only one solution. By following these rules, you can solve the puzzle; No guessing necessary. </p>
+                <details class="rules-details" open>
+                    <summary>How to play</summary>
+
+                    <div class="rules-content">
+                        <p>
+                            The goal is to fill every cell of the grid with either X or Y.
+                            When filled, the grid must follow these rules:
+                        </p>
+
+                        <ol>
+                            <li>
+                                Each row and column contains the same amount of X and Y.
+                            </li>
+                            <li>
+                                No more than two X or Y can be adjacent, either vertically or horizontally.
+                            </li>
+                            <li>
+                                Parallel lines mean the connected cells contain the same symbol.
+                            </li>
+                            <li>
+                                Crossed lines mean the connected cells contain different symbols.
+                            </li>
+                        </ol>
+
+                        <p>
+                            There's only one solution. You can solve the puzzle using logic;
+                            no guessing is necessary.
+                        </p>
+                    </div>
+                </details>
             </div>
 
             <div id="game-container">

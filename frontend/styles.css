@@ -41,7 +41,7 @@ html {
 
 body {
   margin: 0;
-  min-height: 100vh;
+  min-height: 100dvh;
 
   color: var(--color-text);
   background: var(--color-background);
@@ -91,34 +91,44 @@ body {
     left: 50%;
     transform: translateX(-50%);
     margin: 0;
-    font-size: 4rem; 
+
+    font-size: clamp(2rem, 6vw, 4rem);
+    white-space: nowrap;
 }
 
 main {
-    width: 100%;
-    height: calc(100vh - 110px);
-    margin: auto; 
-    padding-block: 1rem;
+    width: min(100%, 110rem);
+    min-height: calc(100dvh - 110px);
 
-    display: flex;
-    flex-direction: row;
+    margin-inline: auto;
+    padding: 2rem 3rem;
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(18rem, 1fr)
+        minmax(28rem, 36rem)
+        minmax(18rem, 1fr);
+
+    grid-template-areas:
+        "rules game leaderboard";
+
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem; 
-    padding: 5rem; 
+    gap: 2rem;
 
     font-family: var(--font-body);
 }
 
 .secondary-container {
-    width: 25vw;
+    width: 100%;
+    max-width: 32rem;
     height: fit-content;
-    padding: 1rem;
+    padding: 1rem 1.25rem;
 
-    border: 15px solid #83c7ff; 
+    border: 15px solid #83c7ff;
     border-radius: 36px;
 
-    font-size: 1.36rem; 
+    font-size: 1.2rem;
 }
 
 .secondary-container h2 {
@@ -136,17 +146,32 @@ main {
     margin: 0.5rem 0; 
 }
 
+#rules-container {
+    grid-area: rules;
+}
+
 #game-container {
-    width: min(100%, 40rem);
+    grid-area: game;
+}
+
+#leaderboard-container {
+    grid-area: leaderboard;
+}
+
+#game-container {
+    width: 100%;
+    max-width: 40rem;
+
     padding: 0.9rem 1.5rem 1.25rem;
 
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem; 
+    gap: 1rem;
 
-    border: 15px solid #83c7ff; 
+    border: 15px solid #83c7ff;
     border-radius: 36px;
+
     background: var(--color-background);
 }
 
@@ -199,7 +224,11 @@ main {
         /
         repeat(6, minmax(0, 1fr));
 
-    width: min(78vw, 520px);
+    width: min(
+        100%, 
+        520px,
+        calc(100dvh - 310px)
+    ); 
     aspect-ratio: 1 / 1;
 
     border: 3px solid var(--color-text);
@@ -314,12 +343,18 @@ main {
 
 #buttons-container {
     display: grid;
-    grid-template-columns: repeat(2, minmax(8rem, 1fr));
-    gap: 1.5rem;
-    width: 88%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    width: 100%;
+    max-width: 28rem;
+
+    gap: 1rem;
 }
 
 #buttons-container button {
+    width: 100%; 
+    min-width: 0;
+
     min-height: 3.25rem;
     padding: 0.65rem 1.5rem;
 
@@ -365,6 +400,21 @@ main {
 
 #hint-message.hint-message--visible {
     opacity: 1;
+}
+
+#leaderboard-container {
+    overflow-x: auto;
+}
+
+#leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#leaderboard-table th,
+#leaderboard-table td {
+    padding: 0.5rem;
+    text-align: left;
 }
 
 #solved-modal {
@@ -471,6 +521,89 @@ main {
 
     font-family: var(--font-body);
     font-size: 0.95rem;
+}
+
+@media (max-width: 1100px) {
+    main {
+        grid-template-columns: 1fr;
+
+        grid-template-areas:
+            "game"
+            "rules"
+            "leaderboard";
+
+        justify-items: center;
+
+        padding: 3rem 2rem;
+    }
+
+    #game-container,
+    .secondary-container {
+        width: min(100%, 40rem);
+        max-width: 40rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .site-header,
+    .site-header-inner {
+        min-height: 80px;
+        height: 80px;
+    }
+
+    .site-logo {
+        padding-left: 1rem;
+        font-size: 2.5rem;
+    }
+
+    .site-header-inner h1 {
+        font-size: clamp(1.8rem, 8vw, 2.7rem);
+    }
+
+    main {
+        padding: 1.5rem 1rem;
+        gap: 1.5rem;
+    }
+
+    #game-container,
+    .secondary-container {
+        border-width: 8px;
+        border-radius: 24px;
+    }
+
+    #game-container {
+        padding: 0.8rem;
+    }
+
+    .secondary-container {
+        padding: 1rem;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 500px) {
+    #timer-message,
+    #date-message {
+        font-size: 1rem;
+        letter-spacing: -1px;
+    }
+
+    .timer-icon {
+        width: 1.7rem;
+        height: 1.7rem;
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 400px) {
+    #buttons-container {
+        gap: 0.6rem;
+    }
+
+    #buttons-container button {
+        padding-inline: 0.75rem;
+        font-size: 1rem;
+    }
 }
 
 @media (max-width: 30rem) {
