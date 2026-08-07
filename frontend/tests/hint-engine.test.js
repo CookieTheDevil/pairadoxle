@@ -170,4 +170,47 @@ describe("findHint", () => {
             SOLUTION[hint.row][hint.col]
         );
     });
+
+    test("uses the equal-edge rule", () => {
+        const board = emptyBoard();
+
+        board[0][0] = "y";
+        board[0][5] = "y";
+
+        const hint = findHint(
+            board,
+            SOLUTION,
+            []
+        );
+
+        expect(hint.type).toBe("deduced");
+        expect(hint.row).toBe(0);
+        expect([1, 4]).toContain(hint.col);
+        expect(hint.value).toBe("x");
+    });
+
+    test("uses the unequal-edge rule", () => {
+        const board = emptyBoard();
+
+        // Solution row 2:
+        // X Y Y X X Y
+        //
+        // Give the engine:
+        // X _ _ _ X _
+        //
+        // Therefore the final cell must be Y.
+        board[2][0] = "x";
+        board[2][4] = "x";
+
+        const hint = findHint(
+            board,
+            SOLUTION,
+            []
+        );
+
+        expect(hint.type).toBe("deduced");
+        expect(hint.row).toBe(2);
+        expect(hint.col).toBe(5);
+        expect(hint.value).toBe("y");
+    });
 });

@@ -63,14 +63,20 @@ function findDeducibleCell(board, solution, relations = []) {
         ...findRelationDeductions(board, relations),
         ...findBalanceDeductions(board),
         ...findAdjacentPairDeductions(board),
-        ...findSeparatedPairDeductions(board)
+        ...findSeparatedPairDeductions(board),
+        ...findEqualEdge(board),
+        ...findUnequalEdge(board)
     ];
 
     const uniqueDeductions = removeDuplicateDeductions(deductions);
 
+    console.log( "logical deductions:", uniqueDeductions );
+
     const verifiedDeductions = uniqueDeductions.filter((hint) =>
         hint.value === solution[hint.row][hint.col]
     );
+
+    console.log( "verified deductions:", verifiedDeductions );
 
     return chooseRandom(verifiedDeductions);
 }
@@ -403,6 +409,180 @@ function findSeparatedPairDeductions(board) {
     }
 
     return deductions;
+}
+
+/**
+ * Hidden equal-edge rule: 
+ * 
+ * XX___X would give three Ys in a row.
+ * Therefore, any X____X can be deduced to be XY__YX
+ * 
+ */
+function findEqualEdge(board) {
+    const deductions = []; 
+
+    for (let row = 0; row < BOARD_SIZE; row += 1) {
+        const first = board[row][0]; 
+        const last = board[row][BOARD_SIZE-1]; 
+
+        if (
+            first !== CELL_STATES.EMPTY &&
+            first === last
+        ) {
+            const second = board[row][1];
+            const secondToLast = board[row][BOARD_SIZE-2];
+
+            if (second === CELL_STATES.EMPTY) {
+                deductions.push({
+                    row,
+                    col: 1,
+                    value: getOpposite(first),
+                    type: "deduced", 
+                    reason:
+                        "The ends of the row are equal, so this cell must contain the opposite symbol."
+                });
+            }
+            
+            if (secondToLast === CELL_STATES.EMPTY) {
+                deductions.push({
+                    row,
+                    col: BOARD_SIZE-2,
+                    value: getOpposite(last),
+                    type: "deduced", 
+                    reason:
+                        "The ends of the row are equal, so this cell must contain the opposite symbol."
+                });
+            }
+        }
+    }
+
+    for (let col = 0; col < BOARD_SIZE; col += 1) {
+        const top = board[0][col];
+        const bottom = board[BOARD_SIZE-1][col];
+
+        if (
+            top !== CELL_STATES.EMPTY &&
+            top === bottom
+        ) {
+            const second = board[1][col];
+            const secondToLast = board[BOARD_SIZE-2][col];
+
+            if (second === CELL_STATES.EMPTY) {
+                deductions.push({
+                    row: 1,
+                    col,
+                    type: "deduced",
+                    value: getOpposite(top),
+                    reason:
+    "The ends of the column are equal, so this cell must contain the opposite symbol."
+                })
+            }
+
+            if (secondToLast === CELL_STATES.EMPTY) {
+                deductions.push({
+                    row: BOARD_SIZE-2,
+                    col,
+                    type: "deduced",
+                    value: getOpposite(bottom),
+                    reason:
+                        "The ends of the column are equal, so this cell must contain the opposite symbol."
+                })
+            }
+        }
+    }
+
+    return deductions;
+}
+
+/**
+ * Hidden unequal-edge rule: 
+ * 
+ * X___XX would give three Ys in a row.
+ * Therefore, any X___X_ can be deduced to be X___XY
+ * 
+ */
+function findUnequalEdge(board) {
+    const deductions = [];
+
+    for (let row = 0; row < BOARD_SIZE; row += 1) {
+        const first = board[row][0]; 
+        const second = board[row][1]; 
+        const secondToLast = board[row][BOARD_SIZE-2]; 
+        const last = board[row][BOARD_SIZE-1]; 
+
+        // X___X_
+        if (
+            first !== CELL_STATES.EMPTY &&
+            last === CELL_STATES.EMPTY &&
+            secondToLast !== CELL_STATES.EMPTY &&
+            first === secondToLast
+        ) {
+            deductions.push({
+                row,
+                col: BOARD_SIZE-1,
+                type: "deduced",
+                value: getOpposite(first),
+                reason: "This is the only valid row without three symbols in a row."
+            })
+        }
+
+        // _X___X
+        if (
+            first === CELL_STATES.EMPTY &&
+            second !== CELL_STATES.EMPTY &&
+            last !== CELL_STATES.EMPTY &&
+            second === last
+        ) {
+            deductions.push({
+                row,
+                col: 0,
+                type: "deduced",
+                value: getOpposite(second),
+                reason: "This is the only valid row without three symbols in a row."
+            })
+        }
+    }
+
+    for (let col = 0; col < BOARD_SIZE; col += 1) {
+        const first = board[0][col]; 
+        const second = board[1][col]; 
+        const secondToLast = board[BOARD_SIZE-2][col]; 
+        const last = board[BOARD_SIZE-1][col]; 
+
+        // X___X_
+        if (
+            first !== CELL_STATES.EMPTY &&
+            last === CELL_STATES.EMPTY &&
+            secondToLast !== CELL_STATES.EMPTY &&
+            first === secondToLast
+        ) {
+            deductions.push({
+                row: BOARD_SIZE-1,
+                col,
+                type: "deduced",
+                value: getOpposite(first),
+                reason: "This is the only valid column without three symbols in a row."
+            })
+        }
+
+        // _X___X
+        if (
+            first === CELL_STATES.EMPTY &&
+            second !== CELL_STATES.EMPTY &&
+            last !== CELL_STATES.EMPTY &&
+            second === last
+        ) {
+            deductions.push({
+                row: 0,
+                col,
+                type: "deduced",
+                value: getOpposite(second),
+                reason: "This is the only valid column without three symbols in a row."
+            })
+        }
+    }
+
+    return deductions; 
 }
 
 /**
