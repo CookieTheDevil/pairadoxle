@@ -1,0 +1,20 @@
+{
+  "name": "pairadoxle",
+  "version": "1.0.0",
+  "description": "Sandra's take on LinkedIn's \"Tango\" Daily Game.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
+}
