@@ -6,7 +6,7 @@ import {
 import {
     findViolations,
     isBoardSolved
-} from "../tests/validator.js";
+} from "../validator.js";
 
 import { 
     findHint 
@@ -170,6 +170,17 @@ export class GameBoard {
         this.isLockedAfterSolve = false;
 
         this.gameState.reset();
+
+        const cells =
+            this.boardElement.querySelectorAll(".cell");
+
+        cells.forEach((cell) => {
+            cell.classList.remove(
+                "cell--solved",
+                "cell--hint-highlight"
+            );
+        });
+
         this.render();
         this.renderViolations();
 
@@ -364,7 +375,14 @@ export class GameBoard {
                     : "relation-marker--different"
             );
 
-            marker.setAttribute("aria-hidden", "true");
+            marker.setAttribute("role", "img");
+
+            marker.setAttribute(
+                "aria-label",
+                relation.type === "same"
+                    ? "These two cells must contain the same symbol"
+                    : "These two cells must contain different symbols"
+            );
 
             if (relation.direction === "horizontal") {
                 marker.style.left =
