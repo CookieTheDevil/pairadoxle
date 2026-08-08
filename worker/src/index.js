@@ -8,14 +8,14 @@ export default {
             });
         }
 
-        if (
-            url.pathname === "/api/leaderboard" &&
-            request.method === "GET"
-        ) {
-            return getLeaderboard(
-                url,
-                env
-            );
+        if (url.pathname === "/api/leaderboard") {
+            if (request.method === "GET") {
+                return getLeaderboard(url, env);
+            }
+
+            if (request.method === "POST") {
+                return submitLeaderboardEntry(request, env);
+            }
         }
 
         return jsonResponse(
@@ -28,14 +28,8 @@ export default {
 };
 
 
-async function getLeaderboard(
-    url,
-    env
-) {
-    const puzzleId =
-        url.searchParams.get(
-            "puzzle"
-        );
+async function getLeaderboard(url, env) {
+    const puzzleId = url.searchParams.get("puzzle");
 
     if (!isValidPuzzleId(puzzleId)) {
         return jsonResponse(
@@ -62,11 +56,127 @@ async function getLeaderboard(
         LIMIT 50
     `).bind(puzzleId).all();
 
-    return jsonResponse({
+    return jsonResponse({puzzleId, entries: result.results});
+}
+
+
+async function submitLeaderboardEntry(request, env) {
+    let body;
+
+    try {
+        body = await request.json();
+    } catch {
+        return jsonResponse(
+            {
+                error:
+                    "Request body must be valid JSON."
+            },
+            400
+        );
+    }
+
+    const validation = validateLeaderboardEntry(body);
+
+    if (!validation.valid) {
+        return jsonResponse(
+            {
+                error:
+                    validation.error
+            },
+            400
+        );
+    }
+
+    const {
         puzzleId,
-        entries:
-            result.results
-    });
+        playerName,
+        timeMs,
+        hintsUsed
+    } = validation.entry;
+
+    await env.pairadoxle_db.prepare(`
+        INSERT INTO leaderboard_entries (
+            puzzle_id,
+            player_name,
+            time_ms,
+            hints_used
+        )
+        VALUES (?, ?, ?, ?)
+    `).bind(puzzleId, playerName, timeMs, hintsUsed).run();
+
+    return jsonResponse(
+        {
+            ok: true,
+            entry: {
+                puzzleId,
+                playerName,
+                timeMs,
+                hintsUsed
+            }
+        },
+        201
+    );
+}
+
+
+function validateLeaderboardEntry(body) {
+    if (
+        body === null ||
+        typeof body !== "object" ||
+        Array.isArray(body)
+    ) {
+        return {
+            valid: false,
+            error: "Invalid request body."
+        };
+    }
+
+    const puzzleId = body.puzzleId;
+    const playerName = typeof body.playerName === "string" ? body.playerName.trim() : "";
+    const timeMs = body.timeMs;
+    const hintsUsed = body.hintsUsed;
+
+    if (!isValidPuzzleId(puzzleId)) {
+        return {
+            valid: false,
+            error: "Invalid puzzle id."
+        };
+    }
+
+    if (playerName.length < 1 || playerName.length > 20) {
+        return {
+            valid: false,
+            error:
+                "Player name must be between 1 and 20 characters."
+        };
+    }
+
+    if (!Number.isInteger(timeMs) || timeMs <= 0) {
+        return {
+            valid: false,
+            error:
+                "Time must be a positive integer."
+        };
+    }
+
+    if (!Number.isInteger(hintsUsed) || hintsUsed < 0) {
+        return {
+            valid: false,
+            error:
+                "Hints used must be a non-negative integer."
+        };
+    }
+
+    return {
+        valid: true,
+
+        entry: {
+            puzzleId,
+            playerName,
+            timeMs,
+            hintsUsed
+        }
+    };
 }
 
 
