@@ -4,9 +4,15 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "tiny-water-04b6",
+	"name": "pairadoxle-api",
 	"main": "src/index.js",
 	"compatibility_date": "2026-08-07",
+	"routes": [
+        {
+            "pattern": "api.sandrakubosch.no",
+            "custom_domain": true
+        }
+    ],
 	"observability": {
 		"enabled": true
 	},

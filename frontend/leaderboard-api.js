@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8787"; //hardcoded for developing
+const API_BASE_URL = "https://api.sandrakubosch.no";
 
 export async function fetchLeaderboard(puzzleId) {
     const url = new URL("/api/leaderboard", API_BASE_URL);

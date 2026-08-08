@@ -1,29 +1,40 @@
+const ALLOWED_ORIGINS = new Set([
+    "https://sandrakubosch.no",
+    "https://www.sandrakubosch.no",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+]);
+
 export default {
     async fetch(request, env) {
-        if (request.method === "OPTIONS") {
-            return new Response(
-                null, {
-                    status: 204,
-                    headers: {
-                        "Access-Control-Allow-Origin": "*",
-                        "Access-Control-Allow-Headers": "Content-Type",
-                        "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
-                    }
-                }
-            );
-        }
-        
         const url = new URL(request.url);
 
-        if (url.pathname === "/api/health") {
-            return jsonResponse({
-                ok: true
+        if (request.method === "OPTIONS") {
+            const origin = request.headers.get("Origin");
+
+            if (!ALLOWED_ORIGINS.has(origin)) {
+                return new Response(null, {
+                    status: 403
+                });
+            }
+
+            return new Response(null, {
+                status: 204,
+                headers: corsHeaders(request)
             });
+        }
+
+        if (url.pathname === "/api/health") {
+            return jsonResponse(
+                { ok: true },
+                200,
+                request
+            );
         }
 
         if (url.pathname === "/api/leaderboard") {
             if (request.method === "GET") {
-                return getLeaderboard(url, env);
+                return getLeaderboard(url, env, request);
             }
 
             if (request.method === "POST") {
@@ -32,16 +43,30 @@ export default {
         }
 
         return jsonResponse(
-            {
-                error: "Not found"
-            },
-            404
+            { error: "Not found" },
+            404,
+            request
         );
     }
 };
 
+function corsHeaders(request) {
+    const origin = request.headers.get("Origin");
 
-async function getLeaderboard(url, env) {
+    if (!ALLOWED_ORIGINS.has(origin)) {
+        return {};
+    }
+
+    return {
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Vary": "Origin"
+    };
+}
+
+
+async function getLeaderboard(url, env, request) {
     const puzzleId = url.searchParams.get("puzzle");
 
     if (!isValidPuzzleId(puzzleId)) {
@@ -50,7 +75,8 @@ async function getLeaderboard(url, env) {
                 error:
                     "Invalid puzzle id."
             },
-            400
+            400,
+            request
         );
     }
 
@@ -76,7 +102,14 @@ const result =
         LIMIT 50
     `).bind(puzzleId).all();
 
-    return jsonResponse({puzzleId, entries: result.results});
+    return jsonResponse(
+        {
+            puzzleId,
+            entries: result.results
+        },
+        200,
+        request
+    );
 }
 
 
@@ -88,10 +121,10 @@ async function submitLeaderboardEntry(request, env) {
     } catch {
         return jsonResponse(
             {
-                error:
-                    "Request body must be valid JSON."
+                error: "Request body must be valid JSON."
             },
-            400
+            400,
+            request
         );
     }
 
@@ -100,10 +133,10 @@ async function submitLeaderboardEntry(request, env) {
     if (!validation.valid) {
         return jsonResponse(
             {
-                error:
-                    validation.error
+                error: validation.error
             },
-            400
+            400,
+            request
         );
     }
 
@@ -131,9 +164,11 @@ async function submitLeaderboardEntry(request, env) {
         if (String(error).includes("UNIQUE constraint failed")) {
             return jsonResponse(
                 {
-                    error: "This result has already been submitted."
+                    error:
+                        "This result has already been submitted."
                 },
-                409
+                409,
+                request
             );
         }
 
@@ -150,7 +185,8 @@ async function submitLeaderboardEntry(request, env) {
                 hintsUsed
             }
         },
-        201
+        201,
+        request
     );
 }
 
@@ -285,14 +321,19 @@ function getTodayPuzzleId() {
     return `${year}-${month}-${day}`;
 }
 
-function jsonResponse(data, status = 200) {
-    return new Response(JSON.stringify(data), {
-        status,
-        headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "Content-Type",
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+function jsonResponse(
+    data,
+    status = 200,
+    request
+) {
+    return new Response(
+        JSON.stringify(data),
+        {
+            status,
+            headers: {
+                "Content-Type": "application/json",
+                ...corsHeaders(request)
+            }
         }
-    });
+    );
 }
