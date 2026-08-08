@@ -79,18 +79,25 @@
 
             <div id="leaderboard-container" class="secondary-container">
                 <h2>Leaderboard</h2>
+
                 <table id="leaderboard-table">
                     <thead>
                         <tr>
                             <th>Rank</th>
                             <th>Name</th>
                             <th>Time</th>
+                            <th>Hints</th>
                         </tr>
                     </thead>
                     <tbody>
                         <!-- Leaderboard entries will be generated here -->
                     </tbody>
                 </table>
+                <p
+                    id="leaderboard-status"
+                    class="leaderboard-status"
+                    hidden
+                ></p>
             </div>
         </main>
         <dialog id="solved-modal" aria-labelledby="solved-title">
@@ -120,6 +127,32 @@
                 </div>
 
                 <p id="share-status" aria-live="polite"></p>
+                <div id="score-submit-section">
+                    <p class="score-submit-info">
+                        Join today's public leaderboard!
+                    </p>
+
+                    <div class="score-submit-row">
+                        <label for="player-name">
+                            Name:
+                        </label>
+
+                        <input
+                            id="player-name"
+                            type="text"
+                            maxlength="20"
+                            autocomplete="nickname"
+                        >
+
+                        <button
+                            id="submit-score-button"
+                            type="button"
+                        >
+                            Submit
+                        </button>
+                </div>
+
+                <p id="score-submit-status" hidden></p>
             </div>
         </dialog>
         <script type="module" src="./app.js"></script>

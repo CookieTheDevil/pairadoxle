@@ -1,6 +1,8 @@
 import { GameState } from "./game-state.js";
 import { GameTimer } from "./timer.js";
 import { GameBoard } from "./components/board.js";
+import { Leaderboard } from "./components/leaderboard.js";
+import { submitScore } from "./leaderboard-api.js";
 import { solveLogically } from "./logic-solver.js";
 import { calculateDifficulty } from "./difficulty.js";
 import {
@@ -63,6 +65,7 @@ function initialiseGame() {
 
     let hintMessageTimeoutId = null;
     let hintsUsed = 0;
+    let scoreSubmissionId = null;
 
     function showHintMessage(message) {
         if (hintMessageTimeoutId !== null) {
@@ -114,6 +117,58 @@ function initialiseGame() {
     difficultyMessage.textContent = formatDifficulty(difficulty.level);
     difficultyMessage.hidden = false;
 
+    const leaderboard = new Leaderboard({
+        tableBody: document.querySelector("#leaderboard-table tbody"),
+        statusElement: document.querySelector("#leaderboard-status"),
+        puzzleId: currentPuzzle.id
+    });
+
+    leaderboard.load();
+
+    const playerNameInput = document.querySelector("#player-name");
+    const submitScoreButton = document.querySelector("#submit-score-button");
+    const scoreSubmitStatus = document.querySelector("#score-submit-status");
+
+    async function handleScoreSubmit() {
+        const playerName = playerNameInput.value.trim();
+
+        if (!playerName) {
+            showScoreStatus("Enter a name first.");
+            return;
+        }
+
+        submitScoreButton.disabled = true;
+        showScoreStatus("Submitting...");
+
+        try {
+            await submitScore({
+                puzzleId: currentPuzzle.id,
+                playerName,
+                timeMs: timer.getElapsedMilliseconds(),
+                hintsUsed,
+                submissionId: scoreSubmissionId
+            });
+            showScoreStatus("Score submitted!");
+
+            playerNameInput.disabled = true;
+            submitScoreButton.disabled = true;
+
+            await leaderboard.load();
+        } catch (error) {
+            console.error(
+                "Could not submit score:",
+                error
+            );
+            showScoreStatus(error.message);
+            submitScoreButton.disabled = false;
+        }
+    }
+
+    function showScoreStatus(message) {
+        scoreSubmitStatus.textContent = message;
+        scoreSubmitStatus.hidden = false;
+    }
+
     const gameBoard = new GameBoard(
         boardElement,
         gameState,
@@ -129,6 +184,11 @@ function initialiseGame() {
             onSolved: () => {
                 timer.stop();
                 saveCurrentProgress();
+
+                if (!scoreSubmissionId) {
+                    scoreSubmissionId =
+                        crypto.randomUUID();
+                }
 
                 solvedTime.textContent = timer.getFormattedTime();
                 solvedHints.textContent = String(hintsUsed);
@@ -248,6 +308,7 @@ function initialiseGame() {
         gameBoard.reset();
         timer.reset();
         hintsUsed = 0;
+        scoreSubmissionId = null;
         clearProgress(); 
         shareStatus.textContent = "";
 
@@ -262,6 +323,14 @@ function initialiseGame() {
         if (solvedModal.open) {
             solvedModal.close(); 
         }
+
+        playerNameInput.disabled = false;
+        playerNameInput.value = "";
+
+        submitScoreButton.disabled = false;
+
+        scoreSubmitStatus.hidden = true;
+        scoreSubmitStatus.textContent = "";
     });
 
     hintButton.addEventListener("click", () => {
@@ -303,6 +372,14 @@ function initialiseGame() {
 
             shareStatus.textContent =
                 "Could not copy the result.";
+        }
+    });
+
+    submitScoreButton.addEventListener("click", handleScoreSubmit);
+
+    playerNameInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            handleScoreSubmit();
         }
     });
 

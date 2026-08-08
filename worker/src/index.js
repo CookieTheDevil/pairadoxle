@@ -1,5 +1,18 @@
 export default {
     async fetch(request, env) {
+        if (request.method === "OPTIONS") {
+            return new Response(
+                null, {
+                    status: 204,
+                    headers: {
+                        "Access-Control-Allow-Origin": "*",
+                        "Access-Control-Allow-Headers": "Content-Type",
+                        "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+                    }
+                }
+            );
+        }
+        
         const url = new URL(request.url);
 
         if (url.pathname === "/api/health") {
@@ -41,8 +54,15 @@ async function getLeaderboard(url, env) {
         );
     }
 
-    const result = await env.pairadoxle_db.prepare(`
+const result =
+    await env.pairadoxle_db.prepare(`
         SELECT
+            ROW_NUMBER() OVER (
+                ORDER BY
+                    time_ms ASC,
+                    hints_used ASC,
+                    created_at ASC
+            ) AS rank,
             player_name,
             time_ms,
             hints_used,
@@ -91,18 +111,34 @@ async function submitLeaderboardEntry(request, env) {
         puzzleId,
         playerName,
         timeMs,
-        hintsUsed
+        hintsUsed,
+        submissionId
     } = validation.entry;
 
-    await env.pairadoxle_db.prepare(`
-        INSERT INTO leaderboard_entries (
-            puzzle_id,
-            player_name,
-            time_ms,
-            hints_used
-        )
-        VALUES (?, ?, ?, ?)
-    `).bind(puzzleId, playerName, timeMs, hintsUsed).run();
+    try {
+        await env.pairadoxle_db
+            .prepare(`
+                INSERT INTO leaderboard_entries (
+                    puzzle_id,
+                    player_name,
+                    time_ms,
+                    hints_used,
+                    submission_id
+                )
+                VALUES (?, ?, ?, ?, ?)
+            `).bind(puzzleId, playerName, timeMs, hintsUsed, submissionId).run();
+    } catch (error) {
+        if (String(error).includes("UNIQUE constraint failed")) {
+            return jsonResponse(
+                {
+                    error: "This result has already been submitted."
+                },
+                409
+            );
+        }
+
+        throw error;
+    }
 
     return jsonResponse(
         {
@@ -135,6 +171,7 @@ function validateLeaderboardEntry(body) {
     const playerName = typeof body.playerName === "string" ? body.playerName.trim() : "";
     const timeMs = body.timeMs;
     const hintsUsed = body.hintsUsed;
+    const submissionId = body.submissionId;
 
     if (!isValidPuzzleId(puzzleId)) {
         return {
@@ -167,6 +204,36 @@ function validateLeaderboardEntry(body) {
         };
     }
 
+    if ( typeof submissionId !== "string" ||
+        submissionId.length < 1 || submissionId.length > 100
+    ) {
+        return {
+            valid: false,
+            error: "Invalid submission id."
+        };
+    }
+
+    if (
+        !Number.isInteger(timeMs) ||
+        timeMs < 1000 ||
+        timeMs > 24 * 60 * 60 * 1000
+    ) {
+        return {
+            valid: false,
+            error: "Invalid completion time."
+        };
+    }
+
+    if (
+        !Number.isInteger(hintsUsed) ||
+        hintsUsed < 0 || hintsUsed > 36
+    ) {
+        return {
+            valid: false,
+            error: "Invalid hint count."
+        };
+    }
+
     return {
         valid: true,
 
@@ -174,23 +241,58 @@ function validateLeaderboardEntry(body) {
             puzzleId,
             playerName,
             timeMs,
-            hintsUsed
+            hintsUsed,
+            submissionId
         }
     };
 }
 
 
 function isValidPuzzleId(puzzleId) {
-    if (typeof puzzleId !== "string") {
+    if ( typeof puzzleId !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(puzzleId)) {
         return false;
     }
 
-    return /^\d{4}-\d{2}-\d{2}$/.test(puzzleId);
+    const [year, month, day] = puzzleId.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+
+    const isRealDate =
+        date.getUTCFullYear() === year &&
+        date.getUTCMonth() === month - 1 &&
+        date.getUTCDate() === day;
+
+    if (!isRealDate) {
+        return false;
+    }
+
+    const today =getTodayPuzzleId();
+    return puzzleId <= today;
 }
 
+function getTodayPuzzleId() {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Europe/Oslo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    });
+
+    const parts = formatter.formatToParts(new Date());
+    const year = parts.find( (part) => part.type === "year")?.value;
+    const month = parts.find((part) => part.type === "month")?.value;
+    const day = parts.find((part) => part.type === "day")?.value;
+
+    return `${year}-${month}-${day}`;
+}
 
 function jsonResponse(data, status = 200) {
     return new Response(JSON.stringify(data), {
-        status, headers: { "Content-Type": "application/json" }
+        status,
+        headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+        }
     });
 }

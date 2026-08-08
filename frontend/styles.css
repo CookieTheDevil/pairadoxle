@@ -556,11 +556,159 @@ main {
 }
 
 #share-status {
-    min-height: 1.25rem;
-    margin: 1rem 0 0;
+    margin: 0.75rem 0 0;
 
     font-family: var(--font-body);
     font-size: 0.95rem;
+}
+
+#share-status:empty {
+    display: none;
+}
+
+#score-submit-section {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid
+        color-mix(
+            in srgb,
+            var(--color-primary) 30%,
+            transparent
+        );
+
+    display: grid;
+    gap: 0.8rem;
+}
+
+.score-submit-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.score-submit-row label {
+    font-family: var(--font-body);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.score-submit-info {
+    margin: 0;
+
+    color: var(--color-text);
+
+    font-family: var(--font-body);
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.35;
+
+    text-align: center;
+}
+
+#player-name {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.75rem;
+
+    padding: 0.6rem 0.85rem;
+
+    border: 2px solid var(--color-primary);
+    border-radius: 0.75rem;
+
+    background: var(--color-primary-subtle);
+    color: var(--color-text);
+
+    font-family: var(--font-utility);
+    font-size: 1rem;
+
+    outline: none;
+
+    transition:
+        border-color 150ms ease,
+        box-shadow 150ms ease,
+        background-color 150ms ease;
+}
+
+#player-name::placeholder {
+    color: color-mix(
+        in srgb,
+        var(--color-text) 55%,
+        transparent
+    );
+}
+
+#player-name:hover {
+    background: white;
+}
+
+#player-name:focus {
+    background: white;
+    border-color: var(--color-primary);
+    box-shadow:
+        0 0 0 3px
+        color-mix(
+            in srgb,
+            var(--color-primary) 20%,
+            transparent
+        );
+}
+
+#player-name:disabled {
+    opacity: 0.65;
+    cursor: default;
+}
+
+#submit-score-button {
+    min-height: 2.75rem;
+    padding: 0.55rem 1rem;
+
+    border: 2px solid var(--color-primary);
+    border-radius: 0.75rem;
+
+    background: var(--color-primary);
+    color: white;
+
+    font-family: var(--font-utility);
+    font-size: 0.95rem;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+        transform 100ms ease,
+        box-shadow 150ms ease;
+}
+
+#submit-score-button:hover:not(:disabled) {
+    box-shadow: 0 4px 10px var(--shadow-color);
+}
+
+#submit-score-button:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+#submit-score-button:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+#submit-score-button:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+#score-submit-status {
+    margin: 0;
+
+    color: var(--color-primary);
+
+    font-family: var(--font-body);
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.35;
+
+    text-align: center;
 }
 
 @media (max-width: 1100px) {
