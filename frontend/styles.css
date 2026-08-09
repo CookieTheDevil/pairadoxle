@@ -468,8 +468,7 @@ main {
 
 #solved-modal {
     width: min(90vw, 28rem);
-    height: min(42rem, calc(100dvh - 2rem)); 
-    max-height: calc(100dvh - 2rem); 
+    max-height: calc(100dvh - 2rem);
 
     padding: 0;
 
@@ -480,7 +479,7 @@ main {
     color: var(--color-text);
 
     box-shadow: 0 1rem 3rem rgb(0 0 0 / 30%);
-    overflow: hidden; 
+    overflow: hidden;
 }
 
 #solved-modal::backdrop {
@@ -489,21 +488,19 @@ main {
 }
 
 .solved-modal-content {
-    height: 100%; 
-
-    padding: 2rem;
+    padding: 1.5rem;
 
     border: 10px solid #83c7ff;
     border-radius: 2rem;
 
-    display: flex; 
+    display: flex;
     flex-direction: column;
 
     text-align: center;
 }
 
 .solved-modal-content h2 {
-    margin: 0 0 1.5rem;
+    margin: 0 0 1rem;
 
     font-family: var(--font-utility);
     font-size: 2.5rem;
@@ -514,7 +511,7 @@ main {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
 
-    margin-bottom: 1.75rem;
+    margin-bottom: 1rem;
 }
 
 .solved-stats p {
@@ -574,7 +571,7 @@ main {
 }
 
 #share-status {
-    min-height: 1.3rem; 
+    height: 1.5rem;
     margin: 0.75rem 0 0;
 
     font-family: var(--font-body);
@@ -583,13 +580,13 @@ main {
     opacity: 0;
 }
 
-#share-status:empty {
+#share-status:not(:empty) {
     opacity: 1;
 }
 
 #score-submit-section {
-    margin-top: 1.25rem;
-    padding-top: 1.25rem;
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
     border-top: 1px solid
         color-mix(
             in srgb,
@@ -720,8 +717,11 @@ main {
 }
 
 #score-submit-status {
-    min-height: 1.7rem; 
+    height: 3.25rem;
     margin: 0;
+
+    display: grid;
+    place-items: center;
 
     color: var(--color-primary);
 
@@ -1019,29 +1019,113 @@ main {
     }
 
     #solved-modal {
-        width: calc(100vw - 1rem);
-        height: min(39rem, calc(100dvh - 1rem));
-        max-height: calc(100dvh - 1rem);
+        width: calc(100vw - 0.75rem);
+        max-height: calc(100dvh - 0.75rem);
 
-        border-radius: 1.5rem;
+        border-radius: 1.25rem;
     }
 
     .solved-modal-content {
-        padding: 1.25rem;
+        padding: 0.75rem;
 
-        border-width: 8px;
-        border-radius: 1.5rem;
+        border-width: 7px;
+        border-radius: 1.25rem;
 
         overflow-y: auto;
     }
 
     .solved-modal-content h2 {
-        font-size: clamp(1.9rem, 8vw, 2.5rem);
-        margin-bottom: 1rem;
+        margin: 0 0 0.75rem;
+
+        font-size: clamp(1.8rem, 9vw, 2.35rem);
+        line-height: 1.05;
     }
 
     .solved-stats {
-        margin-bottom: 1.25rem;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .solved-stats p {
+        gap: 0.2rem;
+
+        padding: 0.6rem;
+        border-radius: 0.75rem;
+    }
+
+    .solved-stats span {
+        font-size: 0.8rem;
+    }
+
+    .solved-stats strong {
+        font-size: 1.25rem;
+    }
+
+    .solved-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        gap: 0.5rem;
+    }
+
+    #share-result-button,
+    #close-modal-button {
+        width: 100%;
+        min-height: 2.6rem;
+
+        padding: 0.45rem 0.6rem;
+
+        font-size: 0.9rem;
+    }
+
+    #share-status {
+        height: 1.2rem;
+        margin-top: 0.35rem;
+
+        font-size: 0.8rem;
+    }
+
+    #score-submit-section {
+        margin-top: 0.6rem;
+        padding-top: 0.6rem;
+
+        gap: 0.5rem;
+    }
+
+    .score-submit-info {
+        font-size: 1rem;
+        line-height: 1.2;
+    }
+
+    .score-submit-row {
+        gap: 0.4rem;
+    }
+
+    .score-submit-row label {
+        font-size: 0.9rem;
+    }
+
+    #player-name,
+    #submit-score-button {
+        min-height: 2.4rem;
+    }
+
+    #player-name {
+        padding: 0.4rem 0.6rem;
+
+        font-size: 0.9rem;
+    }
+
+    #submit-score-button {
+        padding: 0.4rem 0.65rem;
+
+        font-size: 0.85rem;
+    }
+
+    #score-submit-status {
+        height: 2.2rem;
+
+        font-size: 0.9rem;
+        line-height: 1.2;
     }
 }
 
@@ -1053,17 +1137,6 @@ main {
     #buttons-container button {
         padding-inline: 0.75rem;
         font-size: 1rem;
-    }
-}
-
-@media (max-width: 30rem) {
-    .solved-actions {
-        grid-template-columns: 1fr;
-    }
-
-    #share-result-button,
-    #close-modal-button {
-        width: 100%;
     }
 }
 
