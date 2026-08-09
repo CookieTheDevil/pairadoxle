@@ -1,5 +1,7 @@
 const STORAGE_KEY = "pairadoxle-progress"; 
 
+const DEVICE_ID_KEY = "pairadoxle-device-id";
+
 export function saveProgress(progress) {
     try {
         localStorage.setItem(
@@ -32,4 +34,15 @@ export function loadProgress() {
 
 export function clearProgress() {
     localStorage.removeItem(STORAGE_KEY); 
+}
+
+export function getDeviceId() {
+    let deviceId = localStorage.getItem(DEVICE_ID_KEY);
+
+    if (!deviceId) {
+        deviceId = crypto.randomUUID();
+        localStorage.setItem(DEVICE_ID_KEY, deviceId);
+    }
+
+    return deviceId;
 }

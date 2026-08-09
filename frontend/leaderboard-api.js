@@ -25,7 +25,8 @@ export async function submitScore({
     playerName,
     timeMs,
     hintsUsed,
-    submissionId
+    submissionId,
+    deviceId
 }) {
     const response = await fetch(
         `${API_BASE_URL}/api/leaderboard`,
@@ -41,7 +42,8 @@ export async function submitScore({
                 playerName,
                 timeMs,
                 hintsUsed,
-                submissionId
+                submissionId,
+                devideId
             })
         }
     );

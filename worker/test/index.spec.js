@@ -58,7 +58,8 @@ describe("Pairadoxle Worker", () => {
 					playerName: "Sandra",
 					timeMs: 90000,
 					hintsUsed: 1,
-					submissionId: "test-submission-1"
+					submissionId: "test-submission-1",
+					deviceId: "device-submit-1"
 				})
 			}
 		);
@@ -109,19 +110,22 @@ describe("Pairadoxle Worker", () => {
 				playerName: "ThreeHints",
 				timeMs: 90000,
 				hintsUsed: 3,
-				submissionId: "ranking-three-hints"
+				submissionId: "ranking-three-hints",
+				deviceId: "device-ranking-3"
 			},
 			{
 				playerName: "NoHints",
 				timeMs: 90000,
 				hintsUsed: 0,
-				submissionId: "ranking-no-hints"
+				submissionId: "ranking-no-hints",
+				deviceId: "device-ranking-0"
 			},
 			{
 				playerName: "OneHint",
 				timeMs: 90000,
 				hintsUsed: 1,
-				submissionId: "ranking-one-hint"
+				submissionId: "ranking-one-hint",
+				deviceId: "device-ranking-1"
 			}
 		];
 
@@ -191,7 +195,8 @@ describe("Pairadoxle Worker", () => {
 				playerName: "Sandra",
 				timeMs: 90000,
 				hintsUsed: 0,
-				submissionId: "duplicate-test"
+				submissionId: "duplicate-test",
+				deviceId: "device-duplicate-1"
 			};
 
 			const createRequest = () => new Request("http://example.com/api/leaderboard", {

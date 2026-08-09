@@ -8,7 +8,8 @@ import { calculateDifficulty } from "./difficulty.js";
 import {
     saveProgress,
     loadProgress,
-    clearProgress
+    clearProgress,
+    getDeviceId
 } from "./storage.js";
 import {
     getDailyPuzzleId,
@@ -146,7 +147,8 @@ function initialiseGame() {
                 playerName,
                 timeMs: timer.getElapsedMilliseconds(),
                 hintsUsed,
-                submissionId: scoreSubmissionId
+                submissionId: scoreSubmissionId,
+                deviceId
             });
             showScoreStatus("Score submitted!");
 

@@ -145,7 +145,8 @@ async function submitLeaderboardEntry(request, env) {
         playerName,
         timeMs,
         hintsUsed,
-        submissionId
+        submissionId,
+        deviceId
     } = validation.entry;
 
     try {
@@ -156,16 +157,34 @@ async function submitLeaderboardEntry(request, env) {
                     player_name,
                     time_ms,
                     hints_used,
-                    submission_id
+                    submission_id,
+                    device_id
                 )
-                VALUES (?, ?, ?, ?, ?)
-            `).bind(puzzleId, playerName, timeMs, hintsUsed, submissionId).run();
+                VALUES (?, ?, ?, ?, ?, ?)
+            `).bind(puzzleId, playerName, timeMs, hintsUsed, submissionId, deviceId).run();
     } catch (error) {
-        if (String(error).includes("UNIQUE constraint failed")) {
+        const errorMessage = String(error);
+
+        if (
+            errorMessage.includes(
+                "leaderboard_entries.puzzle_id, leaderboard_entries.device_id"
+            )
+        ) {
             return jsonResponse(
                 {
-                    error:
-                        "This result has already been submitted."
+                    error: "You have already submitted a score for today's puzzle."
+                },
+                409,
+                request
+            );
+        }
+
+        if (
+            errorMessage.includes("leaderboard_entries.submission_id")
+        ) {
+            return jsonResponse(
+                {
+                    error: "This result has already been submitted."
                 },
                 409,
                 request
@@ -208,6 +227,7 @@ function validateLeaderboardEntry(body) {
     const timeMs = body.timeMs;
     const hintsUsed = body.hintsUsed;
     const submissionId = body.submissionId;
+    const deviceId = body.deviceId; 
 
     if (!isValidPuzzleId(puzzleId)) {
         return {
@@ -250,24 +270,14 @@ function validateLeaderboardEntry(body) {
     }
 
     if (
-        !Number.isInteger(timeMs) ||
-        timeMs < 1000 ||
-        timeMs > 24 * 60 * 60 * 1000
+        typeof deviceId !== "string" ||
+        deviceId.length < 1 ||
+        deviceId.length > 100
     ) {
         return {
             valid: false,
-            error: "Invalid completion time."
-        };
-    }
-
-    if (
-        !Number.isInteger(hintsUsed) ||
-        hintsUsed < 0 || hintsUsed > 36
-    ) {
-        return {
-            valid: false,
-            error: "Invalid hint count."
-        };
+            error: "Invalid device id."
+        }
     }
 
     return {
@@ -278,7 +288,8 @@ function validateLeaderboardEntry(body) {
             playerName,
             timeMs,
             hintsUsed,
-            submissionId
+            submissionId,
+            deviceId
         }
     };
 }
