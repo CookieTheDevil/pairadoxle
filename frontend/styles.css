@@ -306,6 +306,15 @@ main {
     transform: translate(-50%, -50%) rotate(-45deg);
 }
 
+.cell,
+#hint-button,
+#reset-button,
+#share-result-button,
+#close-modal-button,
+#submit-score-button {
+    touch-action: manipulation;
+}
+
 .cell {
     appearance: none;
 
