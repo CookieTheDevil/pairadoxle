@@ -114,6 +114,8 @@ function initialiseGame() {
     const gameState = new GameState(currentPuzzle);
     const timer = new GameTimer(timerElement); 
 
+    const deviceId = getDeviceId();
+
     const difficulty = getPuzzleDifficulty(currentPuzzle);
     difficultyMessage.textContent = formatDifficulty(difficulty.level);
     difficultyMessage.hidden = false;
