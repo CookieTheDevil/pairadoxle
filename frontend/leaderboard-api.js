@@ -43,7 +43,7 @@ export async function submitScore({
                 timeMs,
                 hintsUsed,
                 submissionId,
-                devideId
+                deviceId
             })
         }
     );
