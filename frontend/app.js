@@ -170,7 +170,6 @@ function initialiseGame() {
 
     function showScoreStatus(message) {
         scoreSubmitStatus.textContent = message;
-        scoreSubmitStatus.hidden = false;
     }
 
     const gameBoard = new GameBoard(
@@ -333,7 +332,6 @@ function initialiseGame() {
 
         submitScoreButton.disabled = false;
 
-        scoreSubmitStatus.hidden = true;
         scoreSubmitStatus.textContent = "";
     });
 
