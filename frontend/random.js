@@ -1,3 +1,7 @@
+/** 
+ * The function is returned to give a random number on demand,
+ * but the number is unique for each date
+ */
 export function createSeededRandom(seedString) {
     let seed = hashString(seedString);
 

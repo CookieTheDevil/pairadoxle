@@ -20,7 +20,7 @@ import {
 } from "./difficulty.js";
 
 import {
-    createSeededRandom
+    createSeededRandom  //Unique pseudo-random based on todays date
 } from "./random.js";
 
 function createEmptyBoard() {
@@ -39,9 +39,16 @@ function copyBoard(board) {
     );
 }
 
+// The magic happens here! Fisher-Yates my beloved
 function shuffle(values, random = Math.random) {
     const copy = [...values];
 
+    /**
+     * random is value between 0 and 1. If this value is 0.50 or above, the candidates are shuffled.
+     * The the value is below 0.50, no real switch occurs.
+     * 
+     * Even if a switch occurs, it doesn't mean Y is used. It is only used if no violation occurs from it. 
+     */
     for (let i = copy.length - 1; i > 0; i--) {
         const j = Math.floor(random() * (i + 1));
         [copy[i], copy[j]] = [copy[j], copy[i]];
@@ -62,28 +69,20 @@ function findFirstEmptyCell(board) {
     return null;
 }
 
-
 function fillBoard(board, random = Math.random) {
     const emptyCell = findFirstEmptyCell(board);
 
+    //only false when there are no empty cells -> board is filled
     if (!emptyCell) {
         return true;
     }
 
     const { row, col } = emptyCell;
 
-    const candidates =
-        shuffle(
-            [
-                CELL_STATES.X,
-                CELL_STATES.Y
-            ],
-            random
-        );
+    const candidates = shuffle([CELL_STATES.X, CELL_STATES.Y], random);
 
     for (const candidate of candidates) {
-        board[row][col] =
-            candidate;
+        board[row][col] = candidate;
 
         if (findViolations(board).size === 0 && fillBoard(board, random)) {
             return true;
@@ -95,7 +94,7 @@ function fillBoard(board, random = Math.random) {
     return false;
 }
 
-
+//Start of the recursive function
 export function generateSolution(random = Math.random) {
     const board = createEmptyBoard();
     const generated = fillBoard(board, random);
@@ -109,7 +108,7 @@ export function generateSolution(random = Math.random) {
     return copyBoard(board);
 }
 
-
+//flattens the array for easy shuffling -> pseudo-random minimal puzzle
 function getAllPositions() {
     const positions = [];
 
@@ -124,7 +123,7 @@ function getAllPositions() {
 
 
 /*
- * Removes as many fixed cells as possible
+ * Removes as many fixed cells as possible, pseudorandomly,
  * while preserving exactly one solution.
  */
 export function generateStartingBoard(
@@ -138,19 +137,12 @@ export function generateStartingBoard(
 
     for ( const { row, col } of positions ) {
         const previousValue = board[row][col];
-
         board[row][col] = CELL_STATES.EMPTY;
 
-        const solutionCount =
-            countSolutions(
-                board,
-                relations,
-                2
-            );
+        const solutionCount = countSolutions(board, relations, 2);
 
         if (solutionCount !== 1) {
-            board[row][col] =
-                previousValue;
+            board[row][col] = previousValue;
         }
     }
 
@@ -173,15 +165,9 @@ export function generatePuzzle(id = "generated-puzzle", options = {}) {
      */
     const random = createSeededRandom(id);
 
-    /*
-     * Normal daily generation:
-     * don't target a difficulty.
-     */
+    // difficulty isn't preset (unless it is)
     if (difficulty === null) {
-        return generatePuzzleCandidate(
-            id,
-            random
-        );
+        return generatePuzzleCandidate(id, random);
     }
 
     const validDifficulties = [
@@ -329,19 +315,9 @@ export function generateRelations(
     maxRelations = 4,
     random = Math.random
 ) {
-    const candidates =
-        shuffle( 
-            getRelationCandidates(solution),
-            random
-        );
+    const candidates = shuffle(getRelationCandidates(solution), random);
 
-    return candidates.slice(
-        0,
-        Math.min(
-            maxRelations,
-            candidates.length
-        )
-    );
+    return candidates.slice(0, Math.min(maxRelations, candidates.length));
 }
 
 function countFilledCells(board) {
@@ -365,23 +341,10 @@ export function generateUsefulRelations(
     random = Math.random
 ) {
     let relations = [];
-
-    let bestStartingBoard =
-        generateStartingBoard(
-            solution,
-            relations,
-            random
-        );
-
+    let bestStartingBoard = generateStartingBoard(solution, relations, random);
     let bestFilledCount = countFilledCells(bestStartingBoard);
 
-    const candidates =
-        shuffle(
-            getRelationCandidates(
-                solution
-            ),
-            random
-        );
+    const candidates = shuffle(getRelationCandidates(solution), random);
 
     for (const candidate of candidates) {
         if (relations.length >= maxRelations) {
@@ -389,14 +352,7 @@ export function generateUsefulRelations(
         }
 
         const testRelations = [...relations, candidate];
-
-        const testStartingBoard =
-            generateStartingBoard(
-                solution,
-                testRelations,
-                random
-            );
-
+        const testStartingBoard = generateStartingBoard(solution, testRelations, random);
         const testFilledCount = countFilledCells(testStartingBoard);
 
         if (testFilledCount < bestFilledCount) {
@@ -406,10 +362,7 @@ export function generateUsefulRelations(
         }
     }
 
-    return {
-        relations,
-        startingBoard: bestStartingBoard
-    };
+    return {relations, startingBoard: bestStartingBoard};
 }
 
 
