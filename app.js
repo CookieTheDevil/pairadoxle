@@ -67,6 +67,7 @@ function initialiseGame() {
     let hintMessageTimeoutId = null;
     let hintsUsed = 0;
     let scoreSubmissionId = null;
+    let scoreSubmitted = false; 
 
     function showHintMessage(message) {
         if (hintMessageTimeoutId !== null) {
@@ -152,6 +153,10 @@ function initialiseGame() {
                 submissionId: scoreSubmissionId,
                 deviceId
             });
+
+            scoreSubmitted = true;
+            saveCurrentProgress();
+
             showScoreStatus("Score submitted!");
 
             playerNameInput.disabled = true;
@@ -172,29 +177,51 @@ function initialiseGame() {
         scoreSubmitStatus.textContent = message;
     }
 
+    function showSolvedModal() {
+        solvedTime.textContent = timer.getFormattedTime();
+        solvedHints.textContent = String(hintsUsed);
+        shareStatus.textContent = "";
+
+        if (scoreSubmitted) {
+            playerNameInput.disabled = true;
+            submitScoreButton.disabled = true;
+
+            showScoreStatus("Your score has already been submitted.");
+        } else {
+            playerNameInput.disabled = false;
+            submitScoreButton.disabled = false;
+
+            showScoreStatus("");
+        }
+
+        if (!solvedModal.open) {
+            solvedModal.showModal();
+        }
+    }
+
     const gameBoard = new GameBoard(
         boardElement,
         gameState,
         {
-            onFirstMove: () => {
-                timer.start();
-            },
-
             onBoardChange: () => {
                 saveCurrentProgress();
             },
 
             onSolved: () => {
                 timer.stop();
-                saveCurrentProgress();
 
                 if (!scoreSubmissionId) {
-                    scoreSubmissionId =
-                        crypto.randomUUID();
+                    scoreSubmissionId = crypto.randomUUID();
                 }
+
+                resetButton.disabled = true;
+                hintButton.disabled = true;
+
+                saveCurrentProgress();
 
                 solvedTime.textContent = timer.getFormattedTime();
                 solvedHints.textContent = String(hintsUsed);
+
                 shareStatus.textContent = "";
 
                 if (!solvedModal.open) {
@@ -211,6 +238,12 @@ function initialiseGame() {
                 active,
                 remainingMilliseconds
             }) => {
+                if (gameBoard.hasBeenSolved) {
+                    hintButton.disabled = true;
+                    hintButton.textContent = "Hint";
+                    return;
+                }
+
                 hintButton.disabled = active;
 
                 if (!active) {
@@ -263,32 +296,44 @@ function initialiseGame() {
             hintsUsed = saved.hintsUsed;
         }
 
+        scoreSubmissionId = typeof saved.scoreSubmissionId === "string" ? saved.scoreSubmissionId : null; 
+        scoreSubmitted = saved.scoreSubmitted === true; 
+
         gameBoard.render();
         gameBoard.renderViolations();
+
+        if (saved.hasStarted) {
+            gameBoard.setHasProgress(true);
+        }
 
         if (saved.solved) {
             gameBoard.hasBeenSolved = true;
             gameBoard.isLockedAfterSolve = true;
 
             gameBoard.lockBoard();
+
             hintButton.disabled = true;
-        } else if (saved.hasStarted) {
-            gameBoard.setHasProgress(true);
-            timer.start();
+            resetButton.disabled = true;
+
+            if (!scoreSubmissionId) {
+                scoreSubmissionId = crypto.randomUUID();
+                saveCurrentProgress();
+            }
+
+            showSolvedModal();
+
+            return;
         }
     }
 
     window.setInterval(() => {
-        if (
-            gameBoard.hasMadeFirstMove &&
-            !gameBoard.hasBeenSolved
-        ) {
+        if (!gameBoard.hasBeenSolved) {
             saveCurrentProgress();
         }
     }, 5000);
 
     window.addEventListener("beforeunload", () => {
-        if (gameBoard.hasMadeFirstMove) {
+        if (!gameBoard.hasBeenSolved) {
             saveCurrentProgress();
         }
     });
@@ -298,21 +343,24 @@ function initialiseGame() {
             puzzleId: gameState.getPuzzleId(),
             board: gameState.getBoard(),
 
-            elapsedMilliseconds:
-                timer.getElapsedMilliseconds(),
+            elapsedMilliseconds: timer.getElapsedMilliseconds(),
 
             hintsUsed,
             solved: gameBoard.hasBeenSolved,
-            hasStarted: gameBoard.hasMadeFirstMove
+            hasStarted: gameBoard.hasMadeFirstMove,
+
+            scoreSubmissionId,
+            scoreSubmitted
         });
     }
 
     resetButton.addEventListener("click", () => {
+        if (gameBoard.hasBeenSolved) {
+            return;
+        }
+
         gameBoard.reset();
-        timer.reset();
-        hintsUsed = 0;
-        scoreSubmissionId = null;
-        clearProgress(); 
+
         shareStatus.textContent = "";
 
         if (hintMessageTimeoutId !== null) {
@@ -323,16 +371,7 @@ function initialiseGame() {
         hintMessage.classList.remove("hint-message--visible");
         hintMessage.textContent = "";
 
-        if (solvedModal.open) {
-            solvedModal.close(); 
-        }
-
-        playerNameInput.disabled = false;
-        playerNameInput.value = "";
-
-        submitScoreButton.disabled = false;
-
-        scoreSubmitStatus.textContent = "";
+        saveCurrentProgress();
     });
 
     hintButton.addEventListener("click", () => {
@@ -388,6 +427,11 @@ function initialiseGame() {
     gameBoard.create();
     restoreSavedProgress(); 
     displayPuzzleDate(currentPuzzle.id);
+
+    if (!gameBoard.hasBeenSolved) {
+        timer.start(); 
+        saveCurrentProgress(); 
+    }
 }
 
 initialiseGame();
