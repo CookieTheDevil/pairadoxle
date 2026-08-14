@@ -345,6 +345,7 @@ main {
 
 .cell,
 #hint-button,
+#undo-button,
 #reset-button,
 #share-result-button,
 #close-modal-button,
@@ -430,11 +431,26 @@ main {
 #buttons-container {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas: 
+        "hint undo"
+        "reset reset"; 
 
     width: 100%;
     max-width: 28rem;
 
     gap: 1rem;
+}
+
+#hint-button {
+    grid-area: hint; 
+}
+
+#undo-button {
+    grid-area: undo; 
+}
+
+#reset-button {
+    grid-area: reset; 
 }
 
 #buttons-container button {

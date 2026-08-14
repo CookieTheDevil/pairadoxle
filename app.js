@@ -61,6 +61,7 @@ function initialiseGame() {
     const difficultyMessage = document.querySelector( "#difficulty-message" );
     const boardElement = document.querySelector("#game-board");
     const hintButton = document.querySelector("#hint-button");
+    const undoButton = document.querySelector("#undo-button"); 
     const resetButton = document.querySelector("#reset-button");
     const hintMessage = document.querySelector("#hint-message");
 
@@ -68,6 +69,7 @@ function initialiseGame() {
     let hintsUsed = 0;
     let scoreSubmissionId = null;
     let scoreSubmitted = false; 
+    let undoHistory = []; 
 
     function showHintMessage(message) {
         if (hintMessageTimeoutId !== null) {
@@ -97,6 +99,7 @@ function initialiseGame() {
         !difficultyMessage ||
         !resetButton ||
         !hintButton ||
+        !undoButton ||
         !hintMessage ||
         !solvedModal ||
         !solvedTime ||
@@ -204,6 +207,7 @@ function initialiseGame() {
         gameState,
         {
             onBoardChange: () => {
+                pushUndoState(); 
                 saveCurrentProgress();
             },
 
@@ -215,23 +219,18 @@ function initialiseGame() {
                 }
 
                 resetButton.disabled = true;
+                undoButton.disabled = true;
                 hintButton.disabled = true;
 
                 saveCurrentProgress();
 
-                solvedTime.textContent = timer.getFormattedTime();
-                solvedHints.textContent = String(hintsUsed);
-
-                shareStatus.textContent = "";
-
-                if (!solvedModal.open) {
-                    solvedModal.showModal();
-                }
+                showSolvedModal();
             },
 
             onHintUsed: (hint) => {
                 hintsUsed += 1;
                 showHintMessage(hint.reason);
+                saveCurrentProgress(); 
             },
 
             onHintCooldownChange: ({
@@ -296,6 +295,28 @@ function initialiseGame() {
             hintsUsed = saved.hintsUsed;
         }
 
+        if (
+            Array.isArray(saved.undoHistory) &&
+            saved.undoHistory.length > 0
+        ) {
+            undoHistory = saved.undoHistory.map(copyBoard);
+        }
+
+        const restoredBoard = copyBoard(gameState.getBoard());
+        const lastHistoryBoard = undoHistory.at(-1);
+
+        if (
+            !lastHistoryBoard ||
+            !boardsAreEqual(
+                lastHistoryBoard,
+                restoredBoard
+            )
+        ) {
+            undoHistory.push(restoredBoard);
+        }
+
+        updateUndoButton();
+
         scoreSubmissionId = typeof saved.scoreSubmissionId === "string" ? saved.scoreSubmissionId : null; 
         scoreSubmitted = saved.scoreSubmitted === true; 
 
@@ -313,6 +334,7 @@ function initialiseGame() {
             gameBoard.lockBoard();
 
             hintButton.disabled = true;
+            undoButton.disabled = true; 
             resetButton.disabled = true;
 
             if (!scoreSubmissionId) {
@@ -350,8 +372,42 @@ function initialiseGame() {
             hasStarted: gameBoard.hasMadeFirstMove,
 
             scoreSubmissionId,
-            scoreSubmitted
+            scoreSubmitted,
+
+            undoHistory: undoHistory.map(copyBoard)
         });
+    }
+
+    function copyBoard(board) {
+        return board.map(
+            (row) => [...row]
+        );
+    }
+
+    function boardsAreEqual(first, second) {
+        return first.every(
+            (row, rowIndex) =>
+                row.every( (cell, colIndex) =>
+                    cell === second[rowIndex][colIndex]
+                )
+        );
+    }
+
+    function updateUndoButton() {
+        undoButton.disabled =
+            gameBoard.hasBeenSolved ||
+            undoHistory.length <= 1;
+    }
+
+    function pushUndoState() {
+        const snapshot = copyBoard(gameState.getBoard());
+        const previous = undoHistory.at(-1);
+
+        if (!previous || !boardsAreEqual(previous, snapshot)) {
+            undoHistory.push(snapshot);
+        }
+
+        updateUndoButton();
     }
 
     resetButton.addEventListener("click", () => {
@@ -360,6 +416,8 @@ function initialiseGame() {
         }
 
         gameBoard.reset();
+
+        pushUndoState(); 
 
         shareStatus.textContent = "";
 
@@ -424,8 +482,34 @@ function initialiseGame() {
         }
     });
 
+    undoButton.addEventListener("click", () => {
+        if (
+            gameBoard.hasBeenSolved ||
+            undoHistory.length <= 1
+        ) {
+            return;
+        }
+
+        undoHistory.pop();
+
+        const previousBoard = copyBoard(undoHistory.at(-1));
+        const restored = gameState.setBoard(previousBoard);
+
+        if (!restored) {
+            return;
+        }
+
+        gameBoard.render();
+        gameBoard.renderViolations();
+
+        updateUndoButton();
+        saveCurrentProgress();
+    });
+
     gameBoard.create();
+    undoHistory = [copyBoard(gameState.getBoard())];
     restoreSavedProgress(); 
+    updateUndoButton(); 
     displayPuzzleDate(currentPuzzle.id);
 
     if (!gameBoard.hasBeenSolved) {
