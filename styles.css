@@ -519,6 +519,21 @@ main {
     text-align: left;
 }
 
+#leaderboard-table tbody tr:nth-child(1) {
+    font-weight: 700; 
+    color: goldenrod; 
+}
+
+#leaderboard-table tbody tr:nth-child(2) {
+    font-weight: 700; 
+    color: silver; 
+}
+
+#leaderboard-table tbody tr:nth-child(3) {
+    font-weight: 700; 
+    color: chocolate; 
+}
+
 #solved-modal {
     width: min(90vw, 28rem);
     max-height: calc(100dvh - 2rem);
