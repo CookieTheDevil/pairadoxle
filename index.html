@@ -36,29 +36,80 @@
                     <summary>How to play</summary>
 
                     <div class="rules-content">
-                        <p>
-                            The goal is to fill every cell of the grid with either X or Y.
-                            When filled, the grid must follow these rules:
+                        <p class="rules-intro">
+                            Fill every cell with <strong>X</strong> or <strong>Y</strong>.
                         </p>
 
-                        <ol>
-                            <li>
-                                Each row and column contains the same amount of X and Y.
-                            </li>
-                            <li>
-                                No more than two X or Y can be adjacent, either vertically or horizontally.
-                            </li>
-                            <li>
-                                Parallel lines mean the connected cells contain the same symbol.
-                            </li>
-                            <li>
-                                Crossed lines mean the connected cells contain different symbols.
-                            </li>
-                        </ol>
+                        <div class="rules-list">
 
-                        <p>
-                            There's only one solution. You can solve the puzzle using logic;
-                            no guessing is necessary.
+                            <!-- Balance -->
+                            <div class="rule-item">
+                                <div class="rule-visual rule-balance" aria-hidden="true">
+                                    <span class="rule-cell rule-x">X</span>
+                                    <span class="rule-cell rule-y">Y</span>
+                                    <span class="rule-cell rule-x">X</span>
+                                    <span class="rule-cell rule-y">Y</span>
+                                    <span class="rule-cell rule-x">X</span>
+                                    <span class="rule-cell rule-y">Y</span>
+                                </div>
+
+                                <p>
+                                    <strong>3 X + 3 Y</strong><br>
+                                    per row and column
+                                </p>
+                            </div>
+
+                            <!-- No three -->
+                            <div class="rule-item">
+                                <div class="rule-visual rule-invalid-triple" aria-hidden="true">
+                                    <span class="rule-cell rule-x">X</span>
+                                    <span class="rule-cell rule-x">X</span>
+                                    <span class="rule-cell rule-x">X</span>
+                                    <span class="rule-wrong">✕</span>
+                                </div>
+
+                                <p>
+                                    <strong>No three</strong><br>
+                                    matching in a row
+                                </p>
+                            </div>
+
+                            <!-- Same -->
+                            <div class="rule-item">
+                                <div class="rule-visual rule-pair" aria-hidden="true">
+                                    <span class="rule-cell rule-x">X</span>
+
+                                    <span class="rule-relation rule-relation--same"></span>
+
+                                    <span class="rule-cell rule-x">X</span>
+                                </div>
+
+                                <p>
+                                    <strong>Parallel</strong><br>
+                                    means same
+                                </p>
+                            </div>
+
+                            <!-- Different -->
+                            <div class="rule-item">
+                                <div class="rule-visual rule-pair" aria-hidden="true">
+                                    <span class="rule-cell rule-x">X</span>
+
+                                    <span class="rule-relation rule-relation--different"></span>
+
+                                    <span class="rule-cell rule-y">Y</span>
+                                </div>
+
+                                <p>
+                                    <strong>Crossed</strong><br>
+                                    means different
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <p class="rules-footer">
+                            One solution. No guessing needed.
                         </p>
                     </div>
                 </details>

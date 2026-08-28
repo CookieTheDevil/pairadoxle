@@ -18,6 +18,7 @@
   --logo-font-family: "Fraunces", serif;                           /* Display, Logo */
   --font-body: "IBM Plex Sans", sans-serif;                        /* General */
   --font-utility: "IBM Plex Mono", system-ui, monospace;           /* Function-like*/
+  --martian-mono: "Martian Mono", monospace;
   --shadow-color: rgb(0 0 0 / 14%);
 }
 
@@ -150,17 +151,23 @@ main {
     margin: 0.5rem 0; 
 }
 
+/* =========================
+   HOW TO PLAY / RULES
+   ========================= */
+
 #rules-container {
     grid-area: rules;
+    container-type: inline-size;
 }
 
+/* Collapsible heading */
 #rules-container summary {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
 
-    margin: 0 0 0.75rem;
+    margin: 0 0 0.9rem;
 
     cursor: pointer;
     list-style: none;
@@ -189,6 +196,202 @@ main {
     outline: 2px solid var(--color-primary);
     outline-offset: 4px;
     border-radius: 0.4rem;
+}
+
+
+/* Main rules content */
+.rules-content {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.rules-intro,
+.rules-footer {
+    margin: 0;
+
+    text-align: center;
+}
+
+.rules-intro {
+    font-size: 1.05rem;
+    line-height: 1.35;
+}
+
+.rules-footer {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+
+/* List of visual rules */
+.rules-list {
+    display: grid;
+    gap: 0.65rem;
+}
+
+
+/* Individual rule */
+.rule-item {
+    display: grid;
+    grid-template-columns: 11rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+
+    padding: 0.65rem 0.75rem;
+
+    border-radius: 1rem;
+
+    background: var(--color-primary-subtle);
+}
+
+.rule-item p {
+    margin: 0;
+
+    font-size: 1rem;
+    line-height: 1.3;
+}
+
+
+/* Visual area */
+.rule-visual {
+    min-width: 0;
+    min-height: 2.8rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* Example puzzle cells */
+.rule-cell {
+    width: 2.3rem;
+    height: 2.3rem;
+
+    display: grid;
+    place-items: center;
+
+    flex-shrink: 0;
+
+    border: 2px solid var(--color-text);
+
+    background: white;
+
+    font-family: var(--martian-mono);
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.rule-x {
+    color: var(--color-primary);
+}
+
+.rule-y {
+    color: var(--color-accent);
+}
+
+
+/* Rule 1:
+   3 X + 3 Y */
+.rule-balance {
+    gap: 0;
+}
+
+.rule-balance .rule-cell {
+    width: 1.75rem;
+    height: 1.75rem;
+
+    font-size: 1.2rem;
+}
+
+
+/* Rule 2:
+   No three matching symbols */
+.rule-invalid-triple {
+    gap: 0;
+}
+
+.rule-invalid-triple .rule-cell {
+    border-color: var(--color-accent);
+    background-color: mistyrose;
+}
+
+.rule-wrong {
+    margin-left: 0.4rem;
+
+    color: var(--color-accent);
+
+    font-family: var(--font-utility);
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+
+/* Rules 3 + 4:
+   relation examples */
+.rule-pair {
+    gap: 0.45rem;
+}
+
+.rule-relation {
+    position: relative;
+
+    width: 1.3rem;
+    height: 1.3rem;
+
+    flex-shrink: 0;
+}
+
+.rule-relation::before,
+.rule-relation::after {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width: 1rem;
+    height: 2px;
+
+    border-radius: 999px;
+
+    background: var(--color-text);
+}
+
+
+/* Parallel lines = same */
+.rule-relation--same::before {
+    transform: translate(-50%, -0.25rem);
+}
+
+.rule-relation--same::after {
+    transform: translate(-50%, 0.15rem);
+}
+
+
+/* Crossed lines = different */
+.rule-relation--different::before {
+    transform:
+        translate(-50%, -50%)
+        rotate(45deg);
+}
+
+.rule-relation--different::after {
+    transform:
+        translate(-50%, -50%)
+        rotate(-45deg);
+}
+
+
+/* =========================
+   RULES - MOBILE
+   ========================= */
+
+@media (max-width: 600px) {
+    
 }
 
 #game-container {
@@ -372,7 +575,7 @@ main {
     background: white;
     color: var(--color-text);
 
-    font-family: "Martian Mono";
+    font-family: var(--martian-mono);
     font-size: clamp(1.5rem, 5vw, 2.75rem);
     font-weight: 600;
 
@@ -891,6 +1094,25 @@ main {
   transition-duration: .3s;
 }
 
+@container (max-width: 25rem) {
+    .rule-item {
+        grid-template-columns: 1fr;
+        justify-items: center;
+
+        gap: 0.35rem;
+        padding: 0.7rem;
+    }
+
+    .rule-item p {
+        text-align: center;
+        line-height: 1.25;
+    }
+
+    .rule-visual {
+        width: 100%;
+    }
+}
+
 @media (max-width: 1100px) {
     main {
         grid-template-columns: 1fr;
@@ -1291,6 +1513,55 @@ main {
 
         font-size: 0.9rem;
         line-height: 1.2;
+    }
+
+    #rules-container summary {
+        margin-bottom: 0.75rem;
+
+        font-size: 1.3rem;
+    }
+
+    .rules-content {
+        gap: 0.65rem;
+    }
+
+    .rules-list {
+        gap: 0.5rem;
+    }
+
+    .rule-item {
+        gap: 0.6rem;
+        padding: 0.6rem;
+    }
+
+    .rule-item p {
+        font-size: 0.9rem;
+    }
+
+    .rules-intro {
+        font-size: 0.95rem;
+    }
+
+    .rules-footer {
+        font-size: 0.85rem;
+    }
+
+    .rule-cell {
+        width: 2rem;
+        height: 2rem;
+
+        font-size: 1.1rem;
+    }
+
+    .rule-balance .rule-cell {
+        width: 1.5rem;
+        height: 1.5rem;
+
+        font-size: 0.8rem;
+    }
+
+    .rule-wrong {
+        font-size: 1.3rem;
     }
 }
 
