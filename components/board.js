@@ -14,8 +14,8 @@ import {
 
 const STATE_SYMBOLS = {
     [CELL_STATES.EMPTY]: '',
-    [CELL_STATES.X]: '{}',
-    [CELL_STATES.Y]: '[]'
+    [CELL_STATES.X]: '0',
+    [CELL_STATES.Y]: '1'
 };
 
 export class GameBoard {
