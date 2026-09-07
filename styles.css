@@ -1662,12 +1662,20 @@ main {
     }
 
     .rule-item {
-        gap: 0.6rem;
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+        gap: 0.5rem;
         padding: 0.6rem;
     }
 
     .rule-item p {
         font-size: 0.9rem;
+        text-align: center;
+    }
+
+    .rule-visual {
+        width: 100%;
     }
 
     .rules-intro {
