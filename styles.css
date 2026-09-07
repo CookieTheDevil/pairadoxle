@@ -271,7 +271,8 @@ main {
 
     box-shadow: 0 1rem 3rem rgb(0 0 0 / 30%);
 
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 #rules-modal::backdrop {
@@ -1640,56 +1641,102 @@ main {
         font-size: 0.9rem;
         line-height: 1.2;
     }
+    #rules-modal {
+        width: calc(100vw - 0.75rem);
+        max-height: calc(100dvh - 0.75rem);
+
+        border-radius: 1.25rem;
+
+        overflow-y: auto;
+    }
+
+    .rules-modal-content {
+        padding: 0.75rem;
+
+        border-width: 6px;
+        border-radius: 1.25rem;
+
+        gap: 0.55rem;
+
+        overflow: visible;
+    }
+
+    .rules-modal-content h2 {
+        font-size: clamp(1.6rem, 8vw, 2rem);
+        line-height: 1;
+    }
 
     .rules-content {
-        gap: 0.65rem;
-    }
-
-    .rules-list {
-        gap: 0.5rem;
-    }
-
-    .rule-item {
-        grid-template-columns: 1fr;
-        justify-items: center;
-        text-align: center;
-        gap: 0.5rem;
-        padding: 0.6rem;
-    }
-
-    .rule-item p {
-        font-size: 0.9rem;
-        text-align: center;
-    }
-
-    .rule-visual {
-        width: 100%;
+        gap: 0.45rem;
     }
 
     .rules-intro {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
+        line-height: 1.2;
     }
 
-    .rules-footer {
-        font-size: 0.85rem;
+    .rules-list {
+        gap: 0.4rem;
+    }
+
+    .rule-item {
+        grid-template-columns: 8.5rem minmax(0, 1fr);
+        align-items: center;
+
+        gap: 0.45rem;
+
+        padding: 0.45rem 0.55rem;
+
+        border-radius: 0.75rem;
+
+        text-align: left;
+    }
+
+    .rule-item p {
+        font-size: 0.82rem;
+        line-height: 1.15;
+        text-align: left;
+    }
+
+    .rule-visual {
+        min-height: 2.2rem;
+        width: 100%;
     }
 
     .rule-cell {
-        width: 2rem;
-        height: 2rem;
+        width: 1.8rem;
+        height: 1.8rem;
 
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
 
     .rule-balance .rule-cell {
-        width: 1.5rem;
+        width: 1.25rem;
         height: 1.5rem;
 
-        font-size: 0.8rem;
+        font-size: 0.75rem;
+    }
+
+    .rule-relation {
+        width: 1rem;
+        height: 1rem;
     }
 
     .rule-wrong {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
+    }
+
+    .rules-footer {
+        font-size: 0.8rem;
+        line-height: 1.15;
+    }
+
+    #close-rules-button {
+        min-height: 2.75rem;
+
+        padding: 0.45rem 0.75rem;
+
+        font-size: 1rem;
     }
 }
 
