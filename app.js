@@ -70,6 +70,7 @@ function initialiseGame() {
     let scoreSubmissionId = null;
     let scoreSubmitted = false; 
     let undoHistory = []; 
+    let rulesDismissed = false;
 
     function showHintMessage(message) {
         if (hintMessageTimeoutId !== null) {
@@ -84,6 +85,10 @@ function initialiseGame() {
             hintMessageTimeoutId = null;
         }, 3500);
     }
+
+    const rulesModal = document.querySelector("#rules-modal");
+    const openRulesButton = document.querySelector("#open-rules-button");
+    const closeRulesButton = document.querySelector("#close-rules-button");
 
     const solvedModal = document.querySelector("#solved-modal"); 
     const solvedTime = document.querySelector("#solved-time"); 
@@ -101,6 +106,9 @@ function initialiseGame() {
         !hintButton ||
         !undoButton ||
         !hintMessage ||
+        !rulesModal ||
+        !openRulesButton ||
+        !closeRulesButton ||
         !solvedModal ||
         !solvedTime ||
         !solvedHints ||
@@ -200,6 +208,10 @@ function initialiseGame() {
         if (!solvedModal.open) {
             solvedModal.showModal();
         }
+    }
+
+    function closeRules() {
+        rulesModal.close();
     }
 
     const gameBoard = new GameBoard(
@@ -320,6 +332,8 @@ function initialiseGame() {
         scoreSubmissionId = typeof saved.scoreSubmissionId === "string" ? saved.scoreSubmissionId : null; 
         scoreSubmitted = saved.scoreSubmitted === true; 
 
+        rulesDismissed = saved.rulesDismissed === true;
+
         gameBoard.render();
         gameBoard.renderViolations();
 
@@ -374,7 +388,9 @@ function initialiseGame() {
             scoreSubmissionId,
             scoreSubmitted,
 
-            undoHistory: undoHistory.map(copyBoard)
+            undoHistory: undoHistory.map(copyBoard),
+
+            rulesDismissed
         });
     }
 
@@ -434,6 +450,48 @@ function initialiseGame() {
 
     hintButton.addEventListener("click", () => {
         gameBoard.giveHint();
+    });
+
+    closeRulesButton.addEventListener(
+        "click",
+        closeRules
+    );
+
+    openRulesButton.addEventListener("click", () => {
+        if (rulesModal.open) {
+            return;
+        }
+
+        if (
+            rulesDismissed &&
+            !gameBoard.hasBeenSolved
+        ) {
+            timer.stop();
+            saveCurrentProgress();
+        }
+
+        closeRulesButton.textContent =
+            gameBoard.hasBeenSolved
+                ? "Close"
+                : "Back to puzzle";
+
+        rulesModal.showModal();
+    });
+
+    rulesModal.addEventListener("close", () => {
+        if (gameBoard.hasBeenSolved) {
+            return;
+        }
+
+        /*
+        * First dismissal starts today's attempt.
+        */
+        if (!rulesDismissed) {
+            rulesDismissed = true;
+        }
+
+        timer.start();
+        saveCurrentProgress();
     });
 
     solvedModal.addEventListener("click", (event) => {
@@ -506,6 +564,7 @@ function initialiseGame() {
         saveCurrentProgress();
     });
 
+
     gameBoard.create();
     undoHistory = [copyBoard(gameState.getBoard())];
     restoreSavedProgress(); 
@@ -513,8 +572,16 @@ function initialiseGame() {
     displayPuzzleDate(currentPuzzle.id);
 
     if (!gameBoard.hasBeenSolved) {
-        timer.start(); 
-        saveCurrentProgress(); 
+        if (rulesDismissed) {
+            timer.start();
+        } else {
+            closeRulesButton.textContent =
+                "Start puzzle";
+
+            rulesModal.showModal();
+        }
+
+        saveCurrentProgress();
     }
 }
 

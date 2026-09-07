@@ -33,87 +33,12 @@
         </header>
         <main>
             <div id="rules-container" class="secondary-container">
-                <details class="rules-details" open>
-                    <summary>How to play</summary>
-
-                    <div class="rules-content">
-                        <p class="rules-intro">
-                            Fill every cell with <strong>0</strong> or <strong>1</strong>.
-                        </p>
-
-                        <div class="rules-list">
-
-                            <!-- Balance -->
-                            <div class="rule-item">
-                                <div class="rule-visual rule-balance" aria-hidden="true">
-                                    <span class="rule-cell rule-x">0</span>
-                                    <span class="rule-cell rule-y">1</span>
-                                    <span class="rule-cell rule-x">0</span>
-                                    <span class="rule-cell rule-y">1</span>
-                                    <span class="rule-cell rule-x">0</span>
-                                    <span class="rule-cell rule-y">1</span>
-                                </div>
-
-                                <p>
-                                    <strong>3 '0' + 3 '1'</strong><br>
-                                    per row and column
-                                </p>
-                            </div>
-
-                            <!-- No three -->
-                            <div class="rule-item">
-                                <div class="rule-visual rule-invalid-triple" aria-hidden="true">
-                                    <span class="rule-cell rule-x">0</span>
-                                    <span class="rule-cell rule-x">0</span>
-                                    <span class="rule-cell rule-x">0</span>
-                                    <span class="rule-wrong">✕</span>
-                                </div>
-
-                                <p>
-                                    <strong>No three</strong><br>
-                                    matching in a row
-                                </p>
-                            </div>
-
-                            <!-- Same -->
-                            <div class="rule-item">
-                                <div class="rule-visual rule-pair" aria-hidden="true">
-                                    <span class="rule-cell rule-x">0</span>
-
-                                    <span class="rule-relation rule-relation--same"></span>
-
-                                    <span class="rule-cell rule-x">0</span>
-                                </div>
-
-                                <p>
-                                    <strong>Parallel</strong><br>
-                                    means same
-                                </p>
-                            </div>
-
-                            <!-- Different -->
-                            <div class="rule-item">
-                                <div class="rule-visual rule-pair" aria-hidden="true">
-                                    <span class="rule-cell rule-x">0</span>
-
-                                    <span class="rule-relation rule-relation--different"></span>
-
-                                    <span class="rule-cell rule-y">1</span>
-                                </div>
-
-                                <p>
-                                    <strong>Crossed</strong><br>
-                                    means different
-                                </p>
-                            </div>
-
-                        </div>
-
-                        <p class="rules-footer">
-                            One solution. No guessing needed.
-                        </p>
-                    </div>
-                </details>
+                <button
+                    id="open-rules-button"
+                    type="button"
+                >
+                    How to play
+                </button>
             </div>
 
             <div id="game-container">
@@ -167,6 +92,117 @@
                 ></p>
             </div>
         </main>
+        <dialog
+            id="rules-modal"
+            aria-labelledby="rules-title"
+        >
+            <div class="rules-modal-content">
+
+                <h2 id="rules-title">
+                    How to play
+                </h2>
+
+                <div class="rules-content">
+                    <p class="rules-intro">
+                        Fill every cell with
+                        <strong>0</strong> or
+                        <strong>1</strong>.
+                    </p>
+
+                    <div class="rules-list">
+
+                        <div class="rule-item">
+                            <div
+                                class="rule-visual rule-balance"
+                                aria-hidden="true"
+                            >
+                                <span class="rule-cell rule-x">0</span>
+                                <span class="rule-cell rule-y">1</span>
+                                <span class="rule-cell rule-x">0</span>
+                                <span class="rule-cell rule-y">1</span>
+                                <span class="rule-cell rule-x">0</span>
+                                <span class="rule-cell rule-y">1</span>
+                            </div>
+
+                            <p>
+                                <strong>3 '0' + 3 '1'</strong><br>
+                                per row and column
+                            </p>
+                        </div>
+
+                        <div class="rule-item">
+                            <div
+                                class="rule-visual rule-invalid-triple"
+                                aria-hidden="true"
+                            >
+                                <span class="rule-cell rule-x">0</span>
+                                <span class="rule-cell rule-x">0</span>
+                                <span class="rule-cell rule-x">0</span>
+                                <span class="rule-wrong">✕</span>
+                            </div>
+
+                            <p>
+                                <strong>No three</strong><br>
+                                matching in a row
+                            </p>
+                        </div>
+
+                        <div class="rule-item">
+                            <div
+                                class="rule-visual rule-pair"
+                                aria-hidden="true"
+                            >
+                                <span class="rule-cell rule-x">0</span>
+
+                                <span
+                                    class="rule-relation rule-relation--same"
+                                ></span>
+
+                                <span class="rule-cell rule-x">0</span>
+                            </div>
+
+                            <p>
+                                <strong>Parallel</strong><br>
+                                means same
+                            </p>
+                        </div>
+
+                        <div class="rule-item">
+                            <div
+                                class="rule-visual rule-pair"
+                                aria-hidden="true"
+                            >
+                                <span class="rule-cell rule-x">0</span>
+
+                                <span
+                                    class="rule-relation rule-relation--different"
+                                ></span>
+
+                                <span class="rule-cell rule-y">1</span>
+                            </div>
+
+                            <p>
+                                <strong>Crossed</strong><br>
+                                means different
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <p class="rules-footer">
+                        One solution. No guessing needed.
+                    </p>
+                </div>
+
+                <button
+                    id="close-rules-button"
+                    type="button"
+                >
+                    Start puzzle
+                </button>
+
+            </div>
+        </dialog>
         <dialog id="solved-modal" aria-labelledby="solved-title">
             <div class="solved-modal-content">
                 <h2 id="solved-title">Puzzle solved!</h2>
