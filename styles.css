@@ -1446,12 +1446,6 @@ main {
         display: none;
     }
 
-    main {
-        padding: 1rem;
-        gap: 1.5rem;
-    }
-
-
     #game-container,
     .secondary-container {
         width: 100%;
@@ -1645,12 +1639,6 @@ main {
 
         font-size: 0.9rem;
         line-height: 1.2;
-    }
-
-    #rules-container summary {
-        margin-bottom: 0.75rem;
-
-        font-size: 1.3rem;
     }
 
     .rules-content {
