@@ -30,7 +30,7 @@ export function findLogicalDeductions(
 ) {
     const deductions = [
         ...findRelationDeductions(board, relations),
-        ...findBalanceDeductions(board),
+        ...findBalanceDeductions(board, relations),
         ...findAdjacentPairDeductions(board),
         ...findSeparatedPairDeductions(board),
         ...findEqualEdge(board),
@@ -182,13 +182,24 @@ function findRelationDeductions(board, relations) {
  *
  * On a 6×6 board, if a row or column already has three X symbols,
  * every remaining empty cell must be Y, and vice versa.
+ * 
+ * This now considers relations as well, 
+ * so if a row has two X symbols and the line has an unfilled different-relation, the remaining empty cells must be Y.
+ * 
+ * Same-relations are considered in previous deductions, so they don't need to be considered here.
  */
-function findBalanceDeductions(board) {
+function findBalanceDeductions(board, relations) {
     const deductions = [];
     const requiredPerSymbol = BOARD_SIZE / 2;
 
     for (let row = 0; row < BOARD_SIZE; row += 1) {
         const values = board[row];
+
+        const differentRelationPairs = relations.filter((relation) => 
+            relation.type == "different" &&
+            relation.direction == "horizontal" &&
+            relation.row == row
+        ).map((relation) => [relation.col, relation.col + 1]);
 
         addBalanceDeductions(
             values,
@@ -198,12 +209,19 @@ function findBalanceDeductions(board) {
                 col: position
             }),
             deductions,
-            `row ${row + 1}`
+            `row ${row + 1}`,
+            differentRelationPairs
         );
     }
 
     for (let col = 0; col < BOARD_SIZE; col += 1) {
         const values = board.map((row) => row[col]);
+
+        const differentRelationPairs = relations.filter((relation) => 
+            relation.type == "different" &&
+            relation.direction == "vertical" &&
+            relation.col == col
+        ).map((relation) => [relation.row, relation.row + 1]);
 
         addBalanceDeductions(
             values,
@@ -213,7 +231,8 @@ function findBalanceDeductions(board) {
                 col
             }),
             deductions,
-            `column ${col + 1}`
+            `column ${col + 1}`,
+            differentRelationPairs
         );
     }
 
@@ -225,11 +244,18 @@ function addBalanceDeductions(
     requiredPerSymbol,
     getCoordinates,
     deductions,
-    locationName
+    locationName,
+    differentRelationPairs = []
 ) {
     const xCount = countSymbol(values, CELL_STATES.X);
     const yCount = countSymbol(values, CELL_STATES.Y);
 
+
+    /**
+     * Simple balance rule: 
+     * if a row or column already has the maximum number of one symbol, 
+     * every remaining empty cell must be the other symbol.
+     */
     let requiredValue = null;
 
     if (xCount === requiredPerSymbol) {
@@ -238,12 +264,86 @@ function addBalanceDeductions(
         requiredValue = CELL_STATES.X;
     }
 
-    if (requiredValue === null) {
-        return;
+    if (requiredValue !== null) {
+        values.forEach((value, position) => {
+            if (value !== CELL_STATES.EMPTY) {
+                return;
+            }
+            
+            const { row, col } = getCoordinates(position);
+            
+            deductions.push({
+                row,
+                col,
+                value: requiredValue,
+                type: "deduced",
+                rule: "balance",
+                reason:
+                `${locationName} already contains the maximum number of the other symbol.`
+            });
+        });
     }
 
+    /**
+     * Relation-aware balance rule:
+     * If a row or column has 2 of one symbol and an unfilled relation that requires 1 of the same symbol,
+     * then the remaining empty cells must be the opposite symbol.
+     */
+
+    for (const relation of differentRelationPairs) {
+        const firstValue = values[relation[0]];
+        const secondValue = values[relation[1]];
+
+        /**
+         * Requires an empty different-relation, since the other cases are handled in the relation deduction step.
+         */
+        if (
+            firstValue !== CELL_STATES.EMPTY ||
+            secondValue !== CELL_STATES.EMPTY
+        ) {
+            continue;
+        }
+
+        if (xCount === requiredPerSymbol - 1) {
+            addOutsideRelationDeductions(
+                values,
+                relation,
+                CELL_STATES.Y,
+                getCoordinates,
+                deductions,
+                locationName
+            );
+        }
+
+        if (yCount === requiredPerSymbol - 1) {
+            addOutsideRelationDeductions(
+                values,
+                relation,
+                CELL_STATES.X,
+                getCoordinates,
+                deductions,
+                locationName
+            );
+        }
+    }
+}
+
+function addOutsideRelationDeductions(
+    values,
+    relation,
+    requiredValue,
+    getCoordinates,
+    deductions,
+    locationName
+) {
     values.forEach((value, position) => {
+        // Only unresolved cells can be part of the hint
         if (value !== CELL_STATES.EMPTY) {
+            return;
+        }
+
+        // Skip the positions that are part of the relation, since they will be filled by the relation deduction if possible
+        if (position === relation[0] || position === relation[1]) {
             return;
         }
 
@@ -256,8 +356,9 @@ function addBalanceDeductions(
             type: "deduced",
             rule: "balance",
             reason:
-                `${locationName} already contains the maximum ` +
-                `number of the other symbol.`
+                `${locationName} already contains two of one symbol, ` +
+                `and the crossed relation must contain one of each. ` +
+                `This cell must therefore contain the opposite symbol.`
         });
     });
 }
