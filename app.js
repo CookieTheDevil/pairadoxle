@@ -51,9 +51,19 @@ function displayPuzzleDate(puzzleId) {
     dateElement.textContent = formatPuzzleDate(puzzleId);
 }
 
-function createShareText(time, hints) {
-    const hintLabel =
-        hints === 1 ? "hint" : "hints";
+function createShareText(time, hints, puzzleId) {
+    const hintLabel = hints === 1 ? "hint" : "hints";
+    const isArchivePuzzle = puzzleId !== getDailyPuzzleId();
+
+    if (isArchivePuzzle) {
+        return [
+            "Pairadoxle Archive",
+            `Puzzle from ${formatPuzzleDate(puzzleId)}`,
+            `Solved in ${time}`,
+            `${hints} ${hintLabel} used`, 
+            window.location.href
+        ].join("\n");
+    }
 
     return [
         "Pairadoxle",
@@ -62,7 +72,6 @@ function createShareText(time, hints) {
         window.location.href
     ].join("\n");
 }
-
 function initialiseGame() {
     const timerElement = document.querySelector("#timer");
     const difficultyMessage = document.querySelector( "#difficulty-message" );
@@ -609,7 +618,8 @@ function initialiseGame() {
     shareResultButton.addEventListener("click", async () => {
         const shareText = createShareText(
             solvedTime.textContent,
-            hintsUsed
+            hintsUsed,
+            currentPuzzle.id
         );
 
         try {
