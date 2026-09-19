@@ -1048,12 +1048,22 @@ main {
         box-shadow 150ms ease;
 }
 
-#buttons-container button:hover {
+#buttons-container button:hover:not(:disabled) {
     box-shadow: 0 4px 10px var(--shadow-color);
 }
 
-#buttons-container button:active {
+#buttons-container button:active:not(:disabled) {
     transform: translateY(1px);
+}
+
+#buttons-container button:disabled {
+    cursor: default;
+
+    transform: none;
+    box-shadow: none;
+
+    transition: none;
+    pointer-events: none;
 }
 
 #buttons-container button:focus-visible {
