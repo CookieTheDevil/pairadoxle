@@ -656,8 +656,11 @@ main {
 
 .archive-weekdays,
 .archive-days {
+    width: 100%;
+    min-width: 0;
+
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 0.35rem;
 }
 
@@ -670,10 +673,16 @@ main {
     color: color-mix(in srgb, var(--color-text) 70%, white);
 }
 
+.archive-weekdays span,
 .archive-day,
 .archive-day-spacer {
+    min-width: 0;
+}
+
+.archive-day,
+.archive-day-spacer {
+    width: 100%;
     aspect-ratio: 1 / 1;
-    min-height: 2.5rem;
 }
 
 .archive-day {
@@ -2048,39 +2057,102 @@ main {
     }
 
     #archive-modal {
-        width: calc(100vw - 0.75rem);
-        max-height: calc(100dvh - 0.75rem);
+        width: calc(100vw - 1rem);
+        max-width: 30rem;
+        max-height: calc(100dvh - 1rem);
+
+        margin: auto;
+
         border-radius: 1.25rem;
+
+        overflow-x: hidden;
+        overflow-y: auto;
     }
 
     .archive-modal-content {
-        padding: 0.9rem;
+        width: 100%;
+        min-width: 0;
+
+        padding: 0.75rem;
+
         border-width: 7px;
         border-radius: 1.25rem;
-        gap: 0.8rem;
+
+        gap: 0.75rem;
+
+        overflow-x: hidden;
     }
 
     .archive-modal-content h2 {
         font-size: 1.8rem;
     }
 
+    .archive-header {
+        width: 100%;
+        min-width: 0;
+
+        grid-template-columns:
+            2.4rem minmax(0, 1fr) 2.4rem;
+
+        gap: 0.5rem;
+    }
+
     #archive-month-title {
+        min-width: 0;
+        margin: 0;
+
         font-size: 1.2rem;
+        white-space: nowrap;
     }
 
     .archive-nav-button {
         width: 2.4rem;
         height: 2.4rem;
+
+        padding: 0;
+
         border-radius: 0.75rem;
+
         font-size: 1.2rem;
     }
 
+    .archive-weekdays,
+    .archive-days {
+        width: 100%;
+        min-width: 0;
+
+        grid-template-columns:
+            repeat(7, minmax(0, 1fr));
+
+        gap: 0.2rem;
+    }
+
     .archive-weekdays span {
-        font-size: 0.8rem;
+        min-width: 0;
+
+        font-size: 0.75rem;
+    }
+
+    .archive-day,
+    .archive-day-spacer {
+        width: 100%;
+        min-width: 0;
+        min-height: 0;
+
+        aspect-ratio: 1 / 1;
     }
 
     .archive-day {
-        font-size: 0.9rem;
+        padding: 0;
+
+        border-radius: 0.6rem;
+
+        font-size: 0.85rem;
+    }
+
+    #close-archive-button {
+        width: 100%;
+        min-width: 0;
     }
 
     #open-archive-button {
