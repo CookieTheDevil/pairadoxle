@@ -32,13 +32,24 @@
             </div>
         </header>
         <main>
-            <div id="rules-container" class="secondary-container">
-                <button
-                    id="open-rules-button"
-                    type="button"
-                >
-                    How to play
-                </button>
+            <div id="side-actions">
+                <div id="rules-container" class="secondary-container">
+                    <button id="open-rules-button" type="button">
+                        How to play
+                    </button>
+                </div>
+
+                <div id="archive-container" class="secondary-container">
+                    <button id="open-archive-button" type="button">
+                        <span class="archive-button-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" class="calendar-icon">
+                                <path d="M7 2v2M17 2v2M3 9h18M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/>
+                            </svg>
+                        </span>
+                        <span>Archive</span>
+                        <span class="archive-button-chevron" aria-hidden="true">›</span>
+                    </button>
+                </div>
             </div>
 
             <div id="game-container">
@@ -92,10 +103,7 @@
                 ></p>
             </div>
         </main>
-        <dialog
-            id="rules-modal"
-            aria-labelledby="rules-title"
-        >
+        <dialog id="rules-modal" aria-labelledby="rules-title">
             <div class="rules-modal-content">
 
                 <h2 id="rules-title">
@@ -253,9 +261,73 @@
                         >
                             Submit
                         </button>
+                    </div>
+
+                    <p
+                        id="score-submit-status"
+                        aria-live="polite"
+                    ></p>
                 </div>
 
-                <p id="score-submit-status" aria-live="polite"></p>
+                <div
+                    id="archive-result-section"
+                    hidden
+                >
+                    <p class="archive-result-label">
+                        You did better than...
+                    </p>
+
+                    <strong id="archive-result-percent">
+                        --
+                    </strong>
+
+                    <p id="archive-result-detail">
+                        Loading results...
+                    </p>
+                </div>
+            </div>
+        </dialog>
+        <dialog id="archive-modal" aria-labelledby="archive-title">
+            <div class="archive-modal-content">
+                <h2 id="archive-title">Archive</h2>
+
+                <div class="archive-header">
+                    <button
+                        id="archive-previous-month"
+                        class="archive-nav-button"
+                        type="button"
+                        aria-label="Previous month"
+                    >
+                        ‹
+                    </button>
+
+                    <p id="archive-month-title"></p>
+
+                    <button
+                        id="archive-next-month"
+                        class="archive-nav-button"
+                        type="button"
+                        aria-label="Next month"
+                    >
+                        ›
+                    </button>
+                </div>
+
+                <div class="archive-weekdays" aria-hidden="true">
+                    <span>M</span>
+                    <span>T</span>
+                    <span>W</span>
+                    <span>T</span>
+                    <span>F</span>
+                    <span>S</span>
+                    <span>S</span>
+                </div>
+
+                <div id="archive-calendar" class="archive-days"></div>
+
+                <button id="close-archive-button" type="button">
+                    Close
+                </button>
             </div>
         </dialog>
         <script type="module" src="./app.js"></script>

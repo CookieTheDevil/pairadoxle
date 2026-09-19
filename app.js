@@ -2,9 +2,16 @@ import { GameState } from "./game-state.js";
 import { GameTimer } from "./timer.js";
 import { GameBoard } from "./components/board.js";
 import { Leaderboard } from "./components/leaderboard.js";
-import { submitScore } from "./leaderboard-api.js";
+import {
+    submitScore,
+    compareArchiveScore
+} from "./leaderboard-api.js";
 import { solveLogically } from "./logic-solver.js";
 import { calculateDifficulty } from "./difficulty.js";
+import {
+    getRequestedPuzzleId,
+    initialiseArchive
+} from "./date-handling.js";
 import {
     saveProgress,
     loadProgress,
@@ -121,7 +128,8 @@ function initialiseGame() {
         );
     }
 
-    const puzzleId = getDailyPuzzleId();
+    const puzzleId = getRequestedPuzzleId();
+    const isTodaysPuzzle = puzzleId === getDailyPuzzleId();
     const currentPuzzle = generatePuzzle(puzzleId);
     const gameState = new GameState(currentPuzzle);
     const timer = new GameTimer(timerElement); 
@@ -143,8 +151,17 @@ function initialiseGame() {
     const playerNameInput = document.querySelector("#player-name");
     const submitScoreButton = document.querySelector("#submit-score-button");
     const scoreSubmitStatus = document.querySelector("#score-submit-status");
+    const scoreSubmitSection = document.querySelector("#score-submit-section");
+
+    const archiveResultSection =  document.querySelector("#archive-result-section");
+    const archiveResultPercent = document.querySelector("#archive-result-percent");
+    const archiveResultDetail = document.querySelector("#archive-result-detail");
 
     async function handleScoreSubmit() {
+        if (!isTodaysPuzzle) {
+            return;
+        }
+
         const playerName = playerNameInput.value.trim();
 
         if (!playerName) {
@@ -188,21 +205,66 @@ function initialiseGame() {
         scoreSubmitStatus.textContent = message;
     }
 
+    async function loadArchiveComparison() {
+        archiveResultPercent.textContent = "--";
+        archiveResultDetail.textContent = "Comparing your result...";
+
+        try {
+            const result = await compareArchiveScore({
+                puzzleId: currentPuzzle.id,
+                timeMs: timer.getElapsedMilliseconds(),
+                hintsUsed
+            });
+
+            if (result.totalPlayers === 0) {
+                archiveResultPercent.textContent = "—";
+                archiveResultDetail.textContent = "No leaderboard results were recorded for this puzzle.";
+                return;
+            }
+
+            archiveResultPercent.textContent = `${result.percentBeaten}%`;
+
+            const playerLabel = result.totalPlayers === 1 ? "player" : "players"; 
+
+            archiveResultDetail.textContent =
+                `You beat ${result.playersBeaten} of ` +
+                `${result.totalPlayers} ${playerLabel} that day.`;
+
+        } catch (error) {
+            console.error(
+                "Could not compare archive result:",
+                error
+            );
+
+            archiveResultPercent.textContent = "—";
+            archiveResultDetail.textContent = "Could not load the comparison.";
+        }
+    }
+
     function showSolvedModal() {
         solvedTime.textContent = timer.getFormattedTime();
         solvedHints.textContent = String(hintsUsed);
         shareStatus.textContent = "";
 
-        if (scoreSubmitted) {
-            playerNameInput.disabled = true;
-            submitScoreButton.disabled = true;
+        if (isTodaysPuzzle) {
+            scoreSubmitSection.hidden = false;
+            archiveResultSection.hidden = true;
 
-            showScoreStatus("Your score has already been submitted.");
+            if (scoreSubmitted) {
+                playerNameInput.disabled = true;
+                submitScoreButton.disabled = true;
+                showScoreStatus("Your score has already been submitted.");
+            } else {
+                playerNameInput.disabled = false;
+                submitScoreButton.disabled = false;
+                showScoreStatus("");
+            }
         } else {
-            playerNameInput.disabled = false;
-            submitScoreButton.disabled = false;
+            scoreSubmitSection.hidden = true;
+            archiveResultSection.hidden = false;
 
             showScoreStatus("");
+            loadArchiveComparison();
         }
 
         if (!solvedModal.open) {
@@ -271,6 +333,22 @@ function initialiseGame() {
             }
         }
     );
+
+    initialiseArchive({
+        onOpen: () => {
+            if (rulesDismissed && !gameBoard.hasBeenSolved) {
+                timer.stop();
+                saveCurrentProgress();
+            }
+        },
+
+        onClose: () => {
+            if (rulesDismissed && !gameBoard.hasBeenSolved) {
+                timer.start();
+                saveCurrentProgress();
+            }
+        }
+    });
 
     function restoreSavedProgress() {
         const saved = loadProgress();
@@ -452,6 +530,30 @@ function initialiseGame() {
         gameBoard.giveHint();
     });
 
+    undoButton.addEventListener("click", () => {
+        if (
+            gameBoard.hasBeenSolved ||
+            undoHistory.length <= 1
+        ) {
+            return;
+        }
+
+        undoHistory.pop();
+
+        const previousBoard = copyBoard(undoHistory.at(-1));
+        const restored = gameState.setBoard(previousBoard);
+
+        if (!restored) {
+            return;
+        }
+
+        gameBoard.render();
+        gameBoard.renderViolations();
+
+        updateUndoButton();
+        saveCurrentProgress();
+    });
+
     closeRulesButton.addEventListener(
         "click",
         closeRules
@@ -539,31 +641,6 @@ function initialiseGame() {
             handleScoreSubmit();
         }
     });
-
-    undoButton.addEventListener("click", () => {
-        if (
-            gameBoard.hasBeenSolved ||
-            undoHistory.length <= 1
-        ) {
-            return;
-        }
-
-        undoHistory.pop();
-
-        const previousBoard = copyBoard(undoHistory.at(-1));
-        const restored = gameState.setBoard(previousBoard);
-
-        if (!restored) {
-            return;
-        }
-
-        gameBoard.render();
-        gameBoard.renderViolations();
-
-        updateUndoButton();
-        saveCurrentProgress();
-    });
-
 
     gameBoard.create();
     undoHistory = [copyBoard(gameState.getBoard())];

@@ -5,6 +5,8 @@ const ALLOWED_ORIGINS = new Set([
     "http://127.0.0.1:5500"
 ]);
 
+const FIRST_PUZZLE_DATE = "2026-08-08";
+
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
@@ -30,6 +32,11 @@ export default {
                 200,
                 request
             );
+        }
+
+        // Handle leaderboard API requests, doesnt post anything to the database, just compares the score with the leaderboard
+        if (url.pathname === "/api/leaderboard/compare" && request.method === "POST") {
+            return compareLeaderboardResult(request, env);
         }
 
         if (url.pathname === "/api/leaderboard") {
@@ -80,27 +87,27 @@ async function getLeaderboard(url, env, request) {
         );
     }
 
-const result =
-    await env.pairadoxle_db.prepare(`
-        SELECT
-            ROW_NUMBER() OVER (
-                ORDER BY
-                    time_ms ASC,
-                    hints_used ASC,
-                    created_at ASC
-            ) AS rank,
-            player_name,
-            time_ms,
-            hints_used,
-            created_at
-        FROM leaderboard_entries
-        WHERE puzzle_id = ?
-        ORDER BY
-            time_ms ASC,
-            hints_used ASC,
-            created_at ASC
-        LIMIT 50
-    `).bind(puzzleId).all();
+    const result =
+        await env.pairadoxle_db.prepare(`
+            SELECT
+                ROW_NUMBER() OVER (
+                    ORDER BY
+                        time_ms ASC,
+                        hints_used ASC,
+                        created_at ASC
+                ) AS rank,
+                player_name,
+                time_ms,
+                hints_used,
+                created_at
+            FROM leaderboard_entries
+            WHERE puzzle_id = ?
+            ORDER BY
+                time_ms ASC,
+                hints_used ASC,
+                created_at ASC
+            LIMIT 50
+        `).bind(puzzleId).all();
 
     return jsonResponse(
         {
@@ -112,6 +119,116 @@ const result =
     );
 }
 
+async function compareLeaderboardResult(request, env) {
+    let body;
+
+    try {
+        body = await request.json();
+    } catch {
+        return jsonResponse(
+            {
+                error: "Request body must be valid JSON."
+            },
+            400,
+            request
+        );
+    }
+
+    if (
+        body === null ||
+        typeof body !== "object" ||
+        Array.isArray(body)
+    ) {
+        return jsonResponse(
+            {
+                error: "Invalid request body."
+            },
+            400,
+            request
+        );
+    }
+
+    const {
+        puzzleId,
+        timeMs,
+        hintsUsed
+    } = body;
+
+    /*
+     * Archive comparison must refer to a valid
+     * published puzzle date.
+     */
+    if (!isValidPuzzleId(puzzleId)) {
+        return jsonResponse(
+            {
+                error: "Invalid puzzle id."
+            },
+            400,
+            request
+        );
+    }
+
+    if (
+        !Number.isInteger(timeMs) ||
+        timeMs <= 0
+    ) {
+        return jsonResponse(
+            {
+                error: "Time must be a positive integer."
+            },
+            400,
+            request
+        );
+    }
+
+    if (!Number.isInteger(hintsUsed) || hintsUsed < 0) {
+        return jsonResponse(
+            {
+                error: "Hints used must be a non-negative integer."
+            },
+            400,
+            request
+        );
+    }
+
+    const result = await env.pairadoxle_db.prepare(`
+        SELECT
+            COUNT(*) AS total_players,
+
+            SUM(
+                CASE
+                    WHEN time_ms > ?1
+                        THEN 1
+
+                    WHEN
+                        time_ms = ?1
+                        AND hints_used > ?2
+                        THEN 1
+
+                    ELSE 0
+                END
+            ) AS players_beaten
+
+        FROM leaderboard_entries
+
+        WHERE puzzle_id = ?3
+    `).bind(timeMs, hintsUsed, puzzleId).first();
+
+    const totalPlayers = Number(result?.total_players ?? 0);
+    const playersBeaten = Number(result?.players_beaten ?? 0);
+    const percentBeaten = totalPlayers === 0 ? 0 : Math.round((playersBeaten / totalPlayers) * 100);
+
+    return jsonResponse(
+        {
+            puzzleId,
+            totalPlayers,
+            playersBeaten,
+            percentBeaten
+        },
+        200,
+        request
+    );
+}
 
 async function submitLeaderboardEntry(request, env) {
     let body;
@@ -236,6 +353,13 @@ function validateLeaderboardEntry(body) {
         };
     }
 
+    if (puzzleId !== getTodayPuzzleId()) {
+        return {
+            valid: false,
+            error: "Scores can only be submitted for today's puzzle."
+        };
+    }
+
     if (playerName.length < 1 || playerName.length > 20) {
         return {
             valid: false,
@@ -312,8 +436,11 @@ function isValidPuzzleId(puzzleId) {
         return false;
     }
 
-    const today =getTodayPuzzleId();
-    return puzzleId <= today;
+    const today = getTodayPuzzleId();
+    return (
+        puzzleId >= FIRST_PUZZLE_DATE &&
+        puzzleId <= today
+    );
 }
 
 function getTodayPuzzleId() {

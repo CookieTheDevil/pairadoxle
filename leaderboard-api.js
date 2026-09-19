@@ -56,3 +56,38 @@ export async function submitScore({
 
     return data;
 }
+
+
+export async function compareArchiveScore({
+    puzzleId,
+    timeMs,
+    hintsUsed
+}) {
+    const response = await fetch(
+        `${API_BASE_URL}/api/leaderboard/compare`,
+        {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                puzzleId,
+                timeMs,
+                hintsUsed
+            })
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            data.error ||
+            "Could not compare archive result."
+        );
+    }
+
+    return data;
+}
