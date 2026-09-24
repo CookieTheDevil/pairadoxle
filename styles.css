@@ -52,6 +52,11 @@ body {
   background: var(--color-background);
 }
 
+html:has(dialog[open]),
+body:has(dialog[open]) {
+    overflow: hidden;
+}
+
 .site-header, .site-header-inner {
     max-width: 100%; 
     min-width: 0; 
