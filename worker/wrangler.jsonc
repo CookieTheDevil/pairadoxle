@@ -26,6 +26,17 @@
 			"database_name": "pairadoxle-db",
 			"database_id": "39e5bb59-668b-4cfa-b8fd-259aa19f6b6a"
 		}
+	],
+
+	"ratelimits": [
+		{
+			"name": "SCORE_RATE_LIMITER",
+			"namespace_id": "1001",
+			"simple": {
+				"limit": 10,
+				"period": 60
+			}
+		}
 	]
 	/**
 	 * Smart Placement

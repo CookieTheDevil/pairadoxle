@@ -6,6 +6,16 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 const FIRST_PUZZLE_DATE = "2026-08-08";
+const MINIMUM_COMPLETION_TIME_MS = 5000;
+
+function hasAllowedOrigin(request) {
+    const origin = request.headers.get("Origin");
+
+    return (
+        typeof origin === "string" &&
+        ALLOWED_ORIGINS.has(origin)
+    );
+}
 
 export default {
     async fetch(request, env) {
@@ -36,6 +46,13 @@ export default {
 
         // Handle leaderboard API requests, doesnt post anything to the database, just compares the score with the leaderboard
         if (url.pathname === "/api/leaderboard/compare" && request.method === "POST") {
+            if (!hasAllowedOrigin(request)) {
+                return jsonResponse(
+                    { error: "Forbidden." },
+                    403,
+                    request
+                );
+            }
             return compareLeaderboardResult(request, env);
         }
 
@@ -45,6 +62,32 @@ export default {
             }
 
             if (request.method === "POST") {
+                if (!hasAllowedOrigin(request)) {
+                    return jsonResponse(
+                        { error: "Forbidden." },
+                        403,
+                        request
+                    );
+                }
+
+                const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+
+                const { success } =
+                    await env.SCORE_RATE_LIMITER.limit({
+                        key: `leaderboard:${ip}`
+                    });
+
+                if (!success) {
+                    return jsonResponse(
+                        {
+                            error:
+                                "Too many score submissions. Try again later."
+                        },
+                        429,
+                        request
+                    );
+                }
+
                 return submitLeaderboardEntry(request, env);
             }
         }
@@ -368,7 +411,7 @@ function validateLeaderboardEntry(body) {
         };
     }
 
-    if (!Number.isInteger(timeMs) || timeMs <= 0) {
+    if (!Number.isInteger(timeMs) || timeMs < MINIMUM_COMPLETION_TIME_MS) {
         return {
             valid: false,
             error:
